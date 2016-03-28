@@ -8,6 +8,9 @@ namespace Horarios
     {
         static void Main(string[] args)
         {
+
+            string[] lines = System.IO.File.ReadAllLines(@"./horarios/11_turmas.txt");
+
             int D = 5, H = 4, T = 2, P = 10;
 
             // mat Atp de necessidade de aulas. prrenche do arquivo.
