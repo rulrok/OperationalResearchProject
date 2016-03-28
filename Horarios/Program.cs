@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using ILOG.Concert;
 using ILOG.CPLEX;
 
@@ -8,17 +9,31 @@ namespace Horarios
     {
         static void Main(string[] args)
         {
+            double[,] a;
+            double[,,] i;
 
-            string[] lines = System.IO.File.ReadAllLines(@"./horarios/11_turmas.txt");
+            var lines = System.IO.File.ReadAllLines(@"./horarios/11_turmas.txt");
 
-            int D = 5, H = 4, T = 2, P = 10;
+            lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
+
+            int P = Int32.Parse( lines[0].Split('\t').First()); //Professores
+            int T = Int32.Parse( lines[1].Split('\t').First()); //Turmas
+            int D = Int32.Parse( lines[2].Split('\t').First()); //Dias e horas
+            int H = Int32.Parse(lines[2].Split('\t')[1]);
+
+
+            foreach (var line in lines)
+            {
+                var columns = line.Split(new[] { ' ', '\t' });
+
+            }
 
             // mat Atp de necessidade de aulas. prrenche do arquivo.
             // turma X prof Y tem q dar Z aulas.
-            var a = new double[T, P];
+            a = new double[T, P];
 
             // mat indisponibilidade do arquivo.
-            var i = new double[D, H, P];
+            i = new double[D, H, P];
 
 
             // ate aqui, tudo arquivo. ^^^^
