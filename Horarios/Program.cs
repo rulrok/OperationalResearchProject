@@ -12,7 +12,7 @@ namespace Horarios
             double[,] a;
             double[,,] i;
 
-            var lines = System.IO.File.ReadAllLines(@"./horarios/11_turmas.txt");
+            var lines = System.IO.File.ReadAllLines(@"./horarios/5_turmas.txt");
 
             lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
 
