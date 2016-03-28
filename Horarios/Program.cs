@@ -16,17 +16,10 @@ namespace Horarios
 
             lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
 
-            int P = Int32.Parse( lines[0].Split('\t').First()); //Professores
-            int T = Int32.Parse( lines[1].Split('\t').First()); //Turmas
-            int D = Int32.Parse( lines[2].Split('\t').First()); //Dias e horas
-            int H = Int32.Parse(lines[2].Split('\t')[1]);
-
-
-            foreach (var line in lines)
-            {
-                var columns = line.Split(new[] { ' ', '\t' });
-
-            }
+            int P = int.Parse(lines[0].Split('\t').First()); //Professores
+            int T = int.Parse(lines[1].Split('\t').First()); //Turmas
+            int D = int.Parse(lines[2].Split('\t').First()); //Dias e horas
+            int H = int.Parse(lines[2].Split('\t')[1]);
 
             // mat Atp de necessidade de aulas. prrenche do arquivo.
             // turma X prof Y tem q dar Z aulas.
@@ -34,6 +27,33 @@ namespace Horarios
 
             // mat indisponibilidade do arquivo.
             i = new double[D, H, P];
+
+            for (int count = 3; count < lines.Length; count++)
+            {
+                var columns = lines[count].Split(new[] { ' ', '\t' });
+
+                int firstNumber = int.Parse(columns[1]);
+                int secondNumber = int.Parse(columns[2]);
+                int thirdNumber = int.Parse(columns[3]);
+
+                if (columns[0].Equals("i"))
+                {
+                    //firstNumber = dia
+                    //secondNumber = hora
+                    //thirdNumber = está indisponível?
+                    i[firstNumber, secondNumber, thirdNumber] = 1;
+                }
+                else if (columns[0].Equals("a"))
+                {
+                    //firstNumber = professor
+                    //secondNumber = Turma
+                    //thirdNumber = horas
+                    a[secondNumber, firstNumber] = thirdNumber;
+                }
+
+            }
+
+
 
 
             // ate aqui, tudo arquivo. ^^^^
@@ -171,6 +191,19 @@ namespace Horarios
                 }
             }
 
+            //Solver the problem
+            if (model.Solve())
+            {
+                Console.WriteLine("Model Feasible");
+                Console.WriteLine("Solution status=" + model.GetStatus());
+                Console.WriteLine("Solution value = " + model.ObjValue);
+                //TODO Print the values
+            }
+            else {
+                Console.WriteLine("Solution status=" + model.GetStatus());
+            }
+
+            Console.ReadKey();
         }
     }
 
