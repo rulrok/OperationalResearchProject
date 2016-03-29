@@ -53,9 +53,6 @@ namespace Horarios
 
             }
 
-
-
-
             // ate aqui, tudo arquivo. ^^^^
 
             Cplex model = new Cplex();
@@ -103,12 +100,11 @@ namespace Horarios
 
             model.AddMaximize(fo);
 
+
             // R3: Add restricao de quantidade de aulas
             // de cada professor por turma.
             // Humberto, 7 periodo, 4 aulas de PO.
             // add TxP restricoes ao modelo.
-
-
             for (int t = 0; t < T; t++)
             {
                 for (int p = 0; p < P; p++)
@@ -133,6 +129,7 @@ namespace Horarios
                     model.AddEq(exp, a[t, p]);
                 }
             }
+
 
             // R1
             for (int d = 0; d < D; d++)
@@ -159,7 +156,6 @@ namespace Horarios
 
                 }
             }
-
 
 
             // R4
@@ -190,6 +186,50 @@ namespace Horarios
 
                 }
             }
+
+
+            // Aulas isoladas: terca feira.
+            /*
+
+            E(i = 1, H) Zi = 1
+            (foto lousa)
+            (a img eh pra um dia e um professor).
+
+            (c5 - y)/5 = c5/5 - y/5
+            addTerm(1/5, c5);
+            addTerm(-1/5, y);
+            
+
+            INumVar y = model.IntVar(0, 5);
+            INumVar z0 = model.BoolVar();
+            INumVar z1 = model.BoolVar();
+            INumVar z2 = model.BoolVar();
+            INumVar z3 = model.BoolVar();
+            INumVar z4 = model.BoolVar();
+            INumVar z5 = model.BoolVar();
+
+            INumVar C5 = model.IntVar(5, 5); model.AddEq(C5, 5);
+            INumVar C4 = model.IntVar(4, 4); model.AddEq(C4, 4);
+            INumVar C3 = model.IntVar(3, 3); model.AddEq(C3, 3);
+            INumVar C2 = model.IntVar(2, 2); model.AddEq(C2, 2);
+
+            ILinearNumExpr fo2 = model.LinearNumExpr();
+            fo2.AddTerm(1, z1);
+            model.AddMinimize(fo2);
+
+            model.AddEq(y, 0); // num aulas.
+            */
+
+
+            //foto 2: eh o somatrio Ydp = EE... da foto da lousa.
+            // o Z vale 1 se for aula isolada, caso contrario 0.
+            // relatorio da minimizacao dos 2 jeitos (lousa e foto do projetor).
+            // instancia X tantos segundos, tantas aulas.
+
+
+            // terca ^
+
+
 
             //Solver the problem
             if (model.Solve())
