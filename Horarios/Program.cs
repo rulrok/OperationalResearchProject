@@ -131,6 +131,31 @@ namespace Horarios
                 }
             }
 
+            // Restrição 2:
+            // Uma turma não pode ter mais de um professor no mesmo dia e horário
+            // Adiciona DxHxT restrições ao modelo
+            for (int d = 0; d < D; d++)
+            {
+                for (int h = 0; h < H; h++)
+                {
+                    for (int t = 0; t < T; t++)
+                    {
+                        ILinearNumExpr exp = model.LinearNumExpr();
+
+                        for (int p = 0; p < P; p++)
+                        {
+
+                            exp.AddTerm(1.0, x[d, h, t, p]);
+
+                        }
+
+                        // Um turma não pode ter no mesmo dia e horário mais de um professor alocado
+                        model.AddLe(exp, 1);
+                    }
+
+                }
+            }
+
 
             // Restrição 4:
             // O professor leciona no máximo duas vezes em cada turma para cada dia
