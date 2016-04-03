@@ -13,15 +13,19 @@ namespace Horarios
             double[,,] i; //Matriz de indisponibilidades
             int P, T, D, H; //Indices para Professor, Turma, Dia e Horário
 
-            //*****************************************************
-            //Obtem os dados de arquivo externo
-            //O método preenche as matrizes e variáveis necessárias
-            //*****************************************************
+            //*******************************************************
+            //  Obtem os dados de arquivo externo
+            //  O método preenche as matrizes e variáveis necessárias
+            //
+            //*******************************************************
             lerArquivo(out a, out i, out P, out T, out D, out H, "5_turmas.txt");
 
             Cplex model = new Cplex();
 
-            // objeto que define uma variavel de decisao.
+            //*******************************************************
+            //  Define a variável de decisão e função objetivo
+            //
+            //*******************************************************
             var x = new INumVar[D, H, T, P];
             
             for (int d = 0; d < D; d++)
@@ -63,6 +67,10 @@ namespace Horarios
 
             model.AddMaximize(fo);
 
+            //*******************************************************
+            //  Adiciona as restrições do modelo
+            //
+            //*******************************************************
 
             // Restrição 3: 
             // A quantidade de aulas de cada professor por turma.
@@ -73,7 +81,7 @@ namespace Horarios
                 for (int p = 0; p < P; p++)
                 {
 
-                    var exp = model.LinearNumExpr();
+                    ILinearNumExpr exp = model.LinearNumExpr();
 
                     // somatorio entre dia e horario.
                     for (int d = 0; d < D; d++)
@@ -104,7 +112,7 @@ namespace Horarios
                     for (int p = 0; p < P; p++)
                     {
 
-                        var exp = model.LinearNumExpr();
+                        ILinearNumExpr exp = model.LinearNumExpr();
 
                         // Verifica para todas as turmas se o professor não está em mais de uma.
                         // Soma quantas vezes ele foi alocado no mesmo dia e mesmo horário.
@@ -124,7 +132,8 @@ namespace Horarios
             }
 
 
-            // R4
+            // Restrição 4:
+            // O professor leciona no máximo duas vezes em cada turma para cada dia
             // (volta gravacao aqui)
             for (int d = 0; d < D; d++)
             {
