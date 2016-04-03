@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using ILOG.Concert;
 using ILOG.CPLEX;
@@ -85,7 +86,7 @@ namespace Horarios
             // E(t = 1 -> T) 1*Xdhpt = 0, para todo d, h, p, se i[d, h, p] = 1.
 
 
-            
+
 
 
             for (int d = 0; d < D; d++)
@@ -109,7 +110,7 @@ namespace Horarios
                         else
                         {
                             //Restrição 1
-                            model.AddLe(exp, 1); 
+                            model.AddLe(exp, 1);
                         }
 
 
@@ -253,7 +254,8 @@ namespace Horarios
 
             // terca ^
 
-
+            //var outputStream = new FileStream("aulas.txt", FileMode.OpenOrCreate, FileAccess.Write);
+            //var writer = new StreamWriter(outputStream);
 
             //Solver the problem
             if (model.Solve())
@@ -266,12 +268,22 @@ namespace Horarios
                 Console.WriteLine(" DxHxT = {0}", D * H * T);
                 Console.WriteLine();
 
+                //Console.SetOut(writer);
+
                 Console.WriteLine();
-                Console.WriteLine("Mostrar tabelas para os professores com turmas unificadas? [y/n]");
+                Console.WriteLine("Mostrar agenda dos professores? [y/n]");
                 var key = Console.ReadKey(true);
                 if (key.Key.Equals(ConsoleKey.Y))
                 {
                     exibirTabelasProfessores(P, T, D, H, model, x);
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Mostrar agenda das turmas? [y/n]");
+                key = Console.ReadKey(true);
+                if (key.Key.Equals(ConsoleKey.Y))
+                {
+                    exibirTabelasTurmas(P, T, D, H, model, x);
                 }
             }
             else {
@@ -281,6 +293,10 @@ namespace Horarios
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
             Console.ReadKey();
+            //Console.Out.Flush();
+            //writer.Dispose();
+            //outputStream.Dispose();
+
         }
 
         #region Métodos para exibir as tabelas no console
@@ -290,7 +306,7 @@ namespace Horarios
             for (int p = 0; p < P; p++)
             {
                 Console.WriteLine();
-                Console.WriteLine("Tabela do professor {0}", p);
+                Console.WriteLine("Agenda do professor {0}", p);
                 //Para cada professor em cada turma, imprimimos a sua tabela de horários
                 Console.WriteLine("+---------------------------------------+");
                 Console.WriteLine("|   S   |   T   |   Q   |   Q   |   S   |");
@@ -312,6 +328,59 @@ namespace Horarios
                                 turmasLecionadasNoMesmoMomento++;
                             }
                             else if (professorLecionaNessaTurmaNesseDiaEHorario == 0)
+                            {
+                                //Para esse dia e horário, a turma t não está alocada para o professor p
+                                //Não fazemos nada por enquanto
+
+                            }
+                            else {
+                                Console.WriteLine("Modelo inconsistente");
+                            }
+                        }
+                        if (turmasLecionadasNoMesmoMomento == 0)
+                        {
+                            Console.Write("  ---  |");
+                        }
+                        else if (turmasLecionadasNoMesmoMomento > 1)
+                        {
+                            Console.WriteLine("Modelo inconsistente");
+                        }
+
+                    } //For D
+                    Console.WriteLine("");
+                } //For H
+                Console.WriteLine("+---------------------------------------+");
+
+            } //For P
+        }
+
+        private static void exibirTabelasTurmas(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
+        {
+            for (int t = 0; t < T; t++)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Agenda da turma {0}", t);
+                //Para cada professor em cada turma, imprimimos a sua tabela de horários
+                Console.WriteLine("+---------------------------------------+");
+                Console.WriteLine("|   S   |   T   |   Q   |   Q   |   S   |");
+                Console.WriteLine("+---------------------------------------+");
+                for (int h = 0; h < H; h++)
+                {
+                    Console.Write("|");
+                    for (int d = 0; d < D; d++)
+                    {
+                        int turmasLecionadasNoMesmoMomento = 0;
+                        for (int p = 0; p < P; p++)
+                        {
+                            var professor = x[d, h, t, p];
+
+                            double turmaContemProfessorNesseDiaEHorario = model.GetValue(professor);
+                            if (turmaContemProfessorNesseDiaEHorario == 1)
+                            {
+                                Console.Write("  P{0:D2}  |", p);
+                                turmasLecionadasNoMesmoMomento++;
+                            }
+                            else if (turmaContemProfessorNesseDiaEHorario == 0)
                             {
                                 //Para esse dia e horário, a turma t não está alocada para o professor p
                                 //Não fazemos nada por enquanto
