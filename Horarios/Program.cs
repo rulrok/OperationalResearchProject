@@ -64,10 +64,10 @@ namespace Horarios
             model.AddMaximize(fo);
 
 
-            // R3: Add restricao de quantidade de aulas
-            // de cada professor por turma.
-            // Humberto, 7 periodo, 4 aulas de PO.
-            // add TxP restricoes ao modelo.
+            // Restrição 3: 
+            // A quantidade de aulas de cada professor por turma.
+            // e.g., Humberto, 7 periodo, 4 aulas de PO.
+            // Adiciona TxP restricoes ao modelo.
             for (int t = 0; t < T; t++)
             {
                 for (int p = 0; p < P; p++)
@@ -86,15 +86,17 @@ namespace Horarios
                         }
                     }
 
-                    // o somatorio tem que ser A[t][p],
-                    // que e o numero de aula q o prof tem q
-                    // dar p uma turma.
+                    // O somatório tem que ser A[t][p],
+                    // que é o número de aula q o prof tem que
+                    // dar para uma turma.
                     model.AddEq(exp, a[t, p]);
                 }
             }
 
 
-            // R1
+            // Restrição 1:
+            // Um professor não pode ser alocado ao mesmo tempo em turmas diferentes
+            // Adiciona DxHxP restrições ao modelo
             for (int d = 0; d < D; d++)
             {
                 for (int h = 0; h < H; h++)
@@ -104,8 +106,8 @@ namespace Horarios
 
                         var exp = model.LinearNumExpr();
 
-                        // verifica p tds turmas se prof n ta em mais de uma.
-                        // soma qnts vezes foi alocado no msm dia msm hr.
+                        // Verifica para todas as turmas se o professor não está em mais de uma.
+                        // Soma quantas vezes ele foi alocado no mesmo dia e mesmo horário.
                         for (int t = 0; t < T; t++)
                         {
 
@@ -113,7 +115,8 @@ namespace Horarios
 
                         }
 
-                        // nao pode ta em mais de uma ao msm tempo.
+                        // Um professor não pode estar em mais de uma turma ao mesmo tempo.
+                        // Xdhp <= 1, para todo T
                         model.AddLe(exp, 1);
                     }
 
