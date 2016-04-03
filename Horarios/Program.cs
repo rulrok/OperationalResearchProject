@@ -18,7 +18,7 @@ namespace Horarios
             //  O método preenche as matrizes e variáveis necessárias
             //
             //*******************************************************
-            lerArquivo(out a, out i, out P, out T, out D, out H, "5_turmas.txt");
+            lerArquivo(out a, out i, out P, out T, out D, out H, "nilda30.txt");
 
             Cplex model = new Cplex();
 
@@ -72,6 +72,98 @@ namespace Horarios
             //
             //*******************************************************
 
+            
+            // Restrição 1:
+            // Um professor não pode ser alocado ao mesmo tempo em turmas diferentes
+            // Adiciona DxHxP restrições ao modelo
+            //for (int d = 0; d < D; d++)
+            //{
+            //    for (int h = 0; h < H; h++)
+            //    {
+            //        for (int p = 0; p < P; p++)
+            //        {
+
+            //            ILinearNumExpr exp = model.LinearNumExpr();
+
+            //            // Verifica para todas as turmas se o professor não está em mais de uma.
+            //            // Soma quantas vezes ele foi alocado no mesmo dia e mesmo horário.
+            //            for (int t = 0; t < T; t++)
+            //            {
+
+            //                exp.AddTerm(1.0, x[d, h, t, p]);
+
+            //            }
+
+            //            // Um professor não pode estar em mais de uma turma ao mesmo tempo.
+            //            // Xdhp <= 1, para todo T
+            //            model.AddLe(exp, 1);
+
+            //        }
+
+            //    }
+            //}
+
+
+            // Restricao 2:
+            // O professor nao pode ser alocado para dar aula
+            // quando ele esta indisponivel.
+            // E(t = 1 -> T) 1*Xdhpt = 0, para todo d, h, p, se i[d, h, p] = 1.
+
+            #region modo 1 - i[dhp]
+
+            //for (int d = 0; d < D; d++)
+            //{
+            //    for (int h = 0; h < H; h++)
+            //    {
+            //        for (int p = 0; p < P; p++)
+            //        {
+
+            //            ILinearNumExpr exp = model.LinearNumExpr();
+
+            //            for (int t = 0; t < T; t++)
+            //            {
+            //                exp.AddTerm(1.0, x[d, h, t, p]);
+            //            }
+
+            //            model.AddLe(exp, 1 - i[d, h, p]);
+            //        }
+            //    }
+            //}
+
+            #endregion
+
+
+            for (int d = 0; d < D; d++)
+            {
+                for (int h = 0; h < H; h++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        ILinearNumExpr expInd = model.LinearNumExpr();
+                        ILinearNumExpr expR1 = model.LinearNumExpr();
+
+                        for (int t = 0; t < T; t++)
+                        {
+                            if (i[d, h, p] == 1)
+                            {
+                                expInd.AddTerm(1.0, x[d, h, t, p]);
+                            }
+                            else
+                            {
+                                expR1.AddTerm(1.0, x[d, h, t, p]);
+                            }
+
+                        }
+
+                        model.AddLe(expR1, 1);
+                        model.AddEq(expInd, 0);
+                    }
+
+                }
+            }
+
+
+
             // Restrição 3: 
             // A quantidade de aulas de cada professor por turma.
             // e.g., Humberto, 7 periodo, 4 aulas de PO.
@@ -102,61 +194,6 @@ namespace Horarios
             }
 
 
-            // Restrição 1:
-            // Um professor não pode ser alocado ao mesmo tempo em turmas diferentes
-            // Adiciona DxHxP restrições ao modelo
-            for (int d = 0; d < D; d++)
-            {
-                for (int h = 0; h < H; h++)
-                {
-                    for (int p = 0; p < P; p++)
-                    {
-
-                        ILinearNumExpr exp = model.LinearNumExpr();
-
-                        // Verifica para todas as turmas se o professor não está em mais de uma.
-                        // Soma quantas vezes ele foi alocado no mesmo dia e mesmo horário.
-                        for (int t = 0; t < T; t++)
-                        {
-
-                            exp.AddTerm(1.0, x[d, h, t, p]);
-
-                        }
-
-                        // Um professor não pode estar em mais de uma turma ao mesmo tempo.
-                        // Xdhp <= 1, para todo T
-                        model.AddLe(exp, 1);
-                    }
-
-                }
-            }
-
-            // Restrição 2:
-            // Uma turma não pode ter mais de um professor no mesmo dia e horário
-            // Adiciona DxHxT restrições ao modelo
-            for (int d = 0; d < D; d++)
-            {
-                for (int h = 0; h < H; h++)
-                {
-                    for (int t = 0; t < T; t++)
-                    {
-                        ILinearNumExpr exp = model.LinearNumExpr();
-
-                        for (int p = 0; p < P; p++)
-                        {
-
-                            exp.AddTerm(1.0, x[d, h, t, p]);
-
-                        }
-
-                        // Um turma não pode ter no mesmo dia e horário mais de um professor alocado
-                        model.AddLe(exp, 1);
-                    }
-
-                }
-            }
-
-
             // Restrição 4:
             // O professor leciona no máximo duas vezes em cada turma para cada dia
             // (volta gravacao aqui)
@@ -182,6 +219,34 @@ namespace Horarios
                         // limita a duas aulas no mesmo dia mesma
                         // turma e mesmo prof.
                         model.AddLe(exp, 2);
+                    }
+
+                }
+
+
+            }
+
+
+            // Restrição 5:
+            // Uma turma não pode ter mais de um professor no mesmo dia e horário
+            // Adiciona DxHxT restrições ao modelo
+            for (int d = 0; d < D; d++)
+            {
+                for (int h = 0; h < H; h++)
+                {
+                    for (int t = 0; t < T; t++)
+                    {
+                        ILinearNumExpr exp = model.LinearNumExpr();
+
+                        for (int p = 0; p < P; p++)
+                        {
+
+                            exp.AddTerm(1.0, x[d, h, t, p]);
+
+                        }
+
+                        // Um turma não pode ter no mesmo dia e horário mais de um professor alocado
+                        model.AddLe(exp, 1);
                     }
 
                 }
@@ -239,6 +304,7 @@ namespace Horarios
                 Console.WriteLine();
                 Console.WriteLine("Solution found:");
                 Console.WriteLine(" Objective value = " + model.ObjValue);
+                Console.WriteLine(" DxHxT = {0}", D*H*T);
                 Console.WriteLine();
 
                 Console.WriteLine("Mostrar tabelas para os professores para cada turma? [y/n]");
