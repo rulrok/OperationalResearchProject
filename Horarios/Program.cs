@@ -246,6 +246,7 @@ namespace Horarios
             Console.ReadKey();
         }
 
+        #region Leitura de arquivo
         private static void lerArquivo(out double[,] a, out double[,,] i, out int P, out int T, out int D, out int H, string fileName)
         {
             var lines = System.IO.File.ReadAllLines(@"./horarios/" + fileName);
@@ -292,6 +293,7 @@ namespace Horarios
 
             }
         }
+        #endregion
     }
 
 }
