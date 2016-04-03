@@ -85,7 +85,7 @@ namespace Horarios
             // E(t = 1 -> T) 1*Xdhpt = 0, para todo d, h, p, se i[d, h, p] = 1.
 
 
-            
+
 
 
             for (int d = 0; d < D; d++)
@@ -109,7 +109,7 @@ namespace Horarios
                         else
                         {
                             //Restrição 1
-                            model.AddLe(exp, 1); 
+                            model.AddLe(exp, 1);
                         }
 
 
@@ -208,6 +208,35 @@ namespace Horarios
                     }
 
                 }
+            }
+            #endregion
+
+            #region Restrição 6
+            IIntVar[,] Z = new IIntVar[P, D];
+            for (int p = 0; p < P; p++)
+            {
+                for (int d = 0; d < D; d++)
+                {
+                    Z[p, d] = model.BoolVar();
+                    ILinearNumExpr expIsolada = model.LinearNumExpr();
+
+                    for (int t = 0; t < T; t++)
+                    {
+                        for (int h = 0; h < H; h++)
+                        {
+                            expIsolada.AddTerm(1.0, x[d, h, t, p]);
+                        }
+                    }
+
+                    //model.Add(model.IfThen(
+                    //    model.Eq(expIsolada, 1)
+                    //    , model.Eq(Z[p, d], 1))
+                    //    );
+                    //fo.AddTerm(1, Z[d, p]);
+
+                }
+
+
             }
             #endregion
 
