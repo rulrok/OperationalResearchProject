@@ -240,6 +240,33 @@ namespace Horarios
             Console.ReadKey();
         }
 
+        #region Métodos para exibir as tabelas no console
+        private static void exibirTabelasProfessoresTurmas(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
+        {
+            for (int p = 0; p < P; p++)
+            {
+                for (int t = 0; t < T; t++)
+                {
+                    Console.WriteLine("Tabela do professor {0} para a turma {1}", p, t);
+                    //Para cada professor em cada turma, imprimimos a sua tabela de horários
+                    Console.WriteLine("| S | T | Q | Q | S |");
+                    for (int h = 0; h < H; h++)
+                    {
+                        Console.Write("|");
+                        for (int d = 0; d < D; d++)
+                        {
+                            var elemento = x[d, h, t, p];
+
+                            double saida = model.GetValue(elemento);
+                            Console.Write(" {0} |", saida);
+                        } //For D
+                        Console.WriteLine("");
+                    } //For H
+
+                } //For T
+            } //For P
+        }
+
         private static void exibirTabelasProfessores(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
         {
             for (int p = 0; p < P; p++)
@@ -287,33 +314,6 @@ namespace Horarios
                 } //For H
 
 
-            } //For P
-        }
-
-        #region Métodos para exibir as tabelas no console
-        private static void exibirTabelasProfessoresTurmas(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
-        {
-            for (int p = 0; p < P; p++)
-            {
-                for (int t = 0; t < T; t++)
-                {
-                    Console.WriteLine("Tabela do professor {0} para a turma {1}", p, t);
-                    //Para cada professor em cada turma, imprimimos a sua tabela de horários
-                    Console.WriteLine("| S | T | Q | Q | S |");
-                    for (int h = 0; h < H; h++)
-                    {
-                        Console.Write("|");
-                        for (int d = 0; d < D; d++)
-                        {
-                            var elemento = x[d, h, t, p];
-
-                            double saida = model.GetValue(elemento);
-                            Console.Write(" {0} |", saida);
-                        } //For D
-                        Console.WriteLine("");
-                    } //For H
-
-                } //For T
             } //For P
         }
         #endregion
