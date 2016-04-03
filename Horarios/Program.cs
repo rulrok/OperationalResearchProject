@@ -23,8 +23,7 @@ namespace Horarios
 
             // objeto que define uma variavel de decisao.
             var x = new INumVar[D, H, T, P];
-
-
+            
             for (int d = 0; d < D; d++)
             {
                 for (int h = 0; h < H; h++)
@@ -33,8 +32,8 @@ namespace Horarios
                     {
                         for (int p = 0; p < P; p++)
                         {
-
-                            // p todo dhtp Xdhtp pertence {0, 1}
+                            //Variável de decisão binária
+                            //Para todo dhtp, X[dhtp] pertence {0, 1}
                             x[d, h, t, p] = model.BoolVar();
 
                         }
