@@ -9,51 +9,15 @@ namespace Horarios
     {
         static void Main(string[] args)
         {
-            double[,] a;
-            double[,,] i;
+            double[,] a; //Matriz de aulas
+            double[,,] i; //Matriz de indisponibilidades
+            int P, T, D, H; //Indices para Professor, Turma, Dia e Horário
 
-            var lines = System.IO.File.ReadAllLines(@"./horarios/5_turmas.txt");
-
-            lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
-
-            int P = int.Parse(lines[0].Split('\t').First()); //Professores
-            int T = int.Parse(lines[1].Split('\t').First()); //Turmas
-            int D = int.Parse(lines[2].Split('\t').First()); //Dias e horas
-            int H = int.Parse(lines[2].Split('\t')[1]);
-
-            // mat Atp de necessidade de aulas. prrenche do arquivo.
-            // turma X prof Y tem q dar Z aulas.
-            a = new double[T, P];
-
-            // mat indisponibilidade do arquivo.
-            i = new double[D, H, P];
-
-            for (int count = 3; count < lines.Length; count++)
-            {
-                var columns = lines[count].Split(new[] { ' ', '\t' });
-
-                int firstNumber = int.Parse(columns[1]);
-                int secondNumber = int.Parse(columns[2]);
-                int thirdNumber = int.Parse(columns[3]);
-
-                if (columns[0].Equals("i"))
-                {
-                    //firstNumber = dia
-                    //secondNumber = hora
-                    //thirdNumber = está indisponível?
-                    i[firstNumber, secondNumber, thirdNumber] = 1;
-                }
-                else if (columns[0].Equals("a"))
-                {
-                    //firstNumber = professor
-                    //secondNumber = Turma
-                    //thirdNumber = horas
-                    a[secondNumber, firstNumber] = thirdNumber;
-                }
-
-            }
-
-            // ate aqui, tudo arquivo. ^^^^
+            //*****************************************************
+            //Obtem os dados de arquivo externo
+            //O método preenche as matrizes e variáveis necessárias
+            //*****************************************************
+            lerArquivo(out a, out i, out P, out T, out D, out H, "5_turmas.txt");
 
             Cplex model = new Cplex();
 
@@ -244,6 +208,53 @@ namespace Horarios
             }
 
             Console.ReadKey();
+        }
+
+        private static void lerArquivo(out double[,] a, out double[,,] i, out int P, out int T, out int D, out int H, string fileName)
+        {
+            var lines = System.IO.File.ReadAllLines(@"./horarios/" + fileName);
+
+            lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
+
+            P = int.Parse(lines[0].Split('\t').First());
+            T = int.Parse(lines[1].Split('\t').First());
+            D = int.Parse(lines[2].Split('\t').First());
+            H = int.Parse(lines[2].Split('\t')[1]);
+
+            // matriz Aulas[t,p] de necessidade de aulas.
+            // turma T prof P tem que dar A aulas.
+            a = new double[T, P];
+
+            // matriz de indisponibilidade.
+            // No dia D, no horário H, o professor P está indisponível (1) ou não (0)
+            i = new double[D, H, P];
+
+            //As três primeiras linhas do arquivo contém os cabeçalhos
+            //portanto começamos o count a partir de 3
+            for (int count = 3; count < lines.Length; count++)
+            {
+                var columns = lines[count].Split(new[] { ' ', '\t' });
+
+                int firstNumber = int.Parse(columns[1]);
+                int secondNumber = int.Parse(columns[2]);
+                int thirdNumber = int.Parse(columns[3]);
+
+                if (columns[0].Equals("i"))
+                {
+                    //firstNumber = dia
+                    //secondNumber = hora
+                    //thirdNumber = está indisponível?
+                    i[firstNumber, secondNumber, thirdNumber] = 1;
+                }
+                else if (columns[0].Equals("a"))
+                {
+                    //firstNumber = professor
+                    //secondNumber = Turma
+                    //thirdNumber = horas
+                    a[secondNumber, firstNumber] = thirdNumber;
+                }
+
+            }
         }
     }
 
