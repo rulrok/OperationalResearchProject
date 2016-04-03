@@ -223,6 +223,13 @@ namespace Horarios
                     exibirTabelasProfessoresTurmas(P, T, D, H, model, x);
                 }
 
+                Console.WriteLine();
+                Console.WriteLine("Mostrar tabelas para os professores com turmas unificadas? [y/n]");
+                key = Console.ReadKey(true);
+                if (key.Key.Equals(ConsoleKey.Y))
+                {
+                    exibirTabelasProfessores(P, T, D, H, model, x);
+                }
             }
             else {
                 Console.WriteLine(" No solution found ");
@@ -231,6 +238,56 @@ namespace Horarios
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
             Console.ReadKey();
+        }
+
+        private static void exibirTabelasProfessores(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
+        {
+            for (int p = 0; p < P; p++)
+            {
+                Console.WriteLine("Tabela do professor {0}", p);
+                //Para cada professor em cada turma, imprimimos a sua tabela de horários
+                Console.WriteLine("|  S  |  T  |  Q  |  Q  |  S  |");
+                for (int h = 0; h < H; h++)
+                {
+                    Console.Write("|");
+                    for (int d = 0; d < D; d++)
+                    {
+                        int turmasLecionadasNoMesmoMomento = 0;
+                        for (int t = 0; t < T; t++)
+                        {
+                            var turma = x[d, h, t, p];
+
+                            double professorLecionaNessaTurmaNesseDiaEHorario = model.GetValue(turma);
+                            if (professorLecionaNessaTurmaNesseDiaEHorario == 1)
+                            {
+                                Console.Write(" T{0}  |", t);
+                                turmasLecionadasNoMesmoMomento++;
+                            }
+                            else if (professorLecionaNessaTurmaNesseDiaEHorario == 0)
+                            {
+                                //Para esse dia e horário, a turma t não está alocada para o professor p
+                                //Não fazemos nada por enquanto
+
+                            }
+                            else {
+                                Console.WriteLine("Modelo inconsistente");
+                            }
+                        }
+                        if (turmasLecionadasNoMesmoMomento == 0)
+                        {
+                            Console.Write(" --  |");
+                        }
+                        else if (turmasLecionadasNoMesmoMomento > 1)
+                        {
+                            Console.WriteLine("Modelo inconsistente");
+                        }
+
+                    } //For D
+                    Console.WriteLine("");
+                } //For H
+
+
+            } //For P
         }
 
         #region Métodos para exibir as tabelas no console
