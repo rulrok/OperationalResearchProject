@@ -119,7 +119,6 @@ namespace Horarios
             }
             #endregion
 
-
             #region Restrição 3
             // Restrição 3: 
             // A quantidade de aulas de cada professor por turma.
