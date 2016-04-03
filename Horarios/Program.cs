@@ -216,33 +216,40 @@ namespace Horarios
                 Console.WriteLine(" Objective value = " + model.ObjValue);
                 Console.WriteLine();
 
-                for (int p = 0; p < P; p++)
+                Console.WriteLine("Mostrar tabelas para os professores para cada turma? [y/n]");
+                var key = Console.ReadKey(true);
+                if (key.Key.Equals(ConsoleKey.Y))
                 {
-                    for (int t = 0; t < T; t++)
+                    for (int p = 0; p < P; p++)
                     {
-                        Console.WriteLine("Tabela do professor {0} para a turma {1}", p, t);
-                        //Para cada professor em cada turma, imprimimos a sua tabela de horários
-                        Console.WriteLine("| S | T | Q | Q | S |");
-                        for (int h = 0; h < H; h++)
+                        for (int t = 0; t < T; t++)
                         {
-                            Console.Write("|");
-                            for (int d = 0; d < D; d++)
+                            Console.WriteLine("Tabela do professor {0} para a turma {1}", p, t);
+                            //Para cada professor em cada turma, imprimimos a sua tabela de horários
+                            Console.WriteLine("| S | T | Q | Q | S |");
+                            for (int h = 0; h < H; h++)
                             {
-                                var elemento = x[d, h, t, p];
+                                Console.Write("|");
+                                for (int d = 0; d < D; d++)
+                                {
+                                    var elemento = x[d, h, t, p];
 
-                                double saida = model.GetValue(elemento);
-                                Console.Write(" {0} |",saida);
-                            }
-                            Console.WriteLine("");
-                        }
-                    }
-                }
+                                    double saida = model.GetValue(elemento);
+                                    Console.Write(" {0} |", saida);
+                                } //For D
+                                Console.WriteLine("");
+                            } //For H
+
+                        } //For T
+                    } //For P
+                } //End IF
             }
             else {
                 Console.WriteLine(" No solution found ");
                 Console.WriteLine("Solution status=" + model.GetStatus());
             }
 
+            Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
             Console.ReadKey();
         }
 
