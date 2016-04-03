@@ -213,6 +213,41 @@ namespace Horarios
             #endregion
 
             #region Restrição 6
+
+            // y[d,p] = num aulas prof P dia D.
+            var y = new INumVar[D, P];
+
+            for (int d = 0; d < D; d++)
+            {
+                for (int p = 0; p < P; p++)
+                {
+                    y[d, p] = model.BoolVar();
+                }
+            }
+
+
+            for (int d = 0; d < D; d++)
+            {
+                for (int p = 0; p < P; p++)
+                {
+                    var exp = model.LinearNumExpr();
+
+                    for (int h = 0; h < H; h++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            exp.AddTerm(1, x[d, h, t, p]);
+                        }
+                    }
+
+                    model.Add(model.IfThen(model.Eq(exp, 1), model.Eq(y[d, p], 1)));
+                    model.Add(model.IfThen(model.Eq(exp, 0), model.Eq(y[d, p], 0)));
+                    model.Add(model.IfThen(model.Ge(exp, 2), model.Eq(y[d, p], 0)));
+
+                }
+            }
+
+
             IIntVar[,] Z = new IIntVar[P, D];
             for (int p = 0; p < P; p++)
             {
@@ -289,6 +324,17 @@ namespace Horarios
             //Solver the problem
             if (model.Solve())
             {
+                for (int d = 0; d < D; d++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        if (model.GetValue(y[d, p]) == 1)
+                        {
+                            Console.WriteLine("Professor {0} no dia {1} tem aula isolada!", p, d);
+                        }
+                    }
+                }
+
                 Console.WriteLine("Solution status = " + model.GetStatus());
                 Console.WriteLine("--------------------------------------------");
                 Console.WriteLine();
