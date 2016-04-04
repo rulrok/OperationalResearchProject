@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using ILOG.Concert;
 using ILOG.CPLEX;
+using System.Diagnostics;
 
 namespace Horarios
 {
@@ -10,153 +11,128 @@ namespace Horarios
     {
         static void Main(string[] args)
         {
-            double[,] a; //Matriz de aulas
-            double[,,] i; //Matriz de indisponibilidades
-            int P, T, D, H; //Indices para Professor, Turma, Dia e Horário
 
             //*******************************************************
             //  Obtem os dados de arquivo externo
             //  O método preenche as matrizes e variáveis necessárias
             //
             //*******************************************************
-            lerArquivo(out a, out i, out P, out T, out D, out H, "nilda30.txt");
 
-            Cplex model = new Cplex();
+            var files = Directory.GetFiles(@"./horarios/");
+            var stdout = Console.Out;
 
-            //*******************************************************
-            //  Define a variável de decisão e função objetivo
-            //
-            //*******************************************************
-            var x = new INumVar[D, H, T, P];
-
-            for (int d = 0; d < D; d++)
+            foreach (var file in files)
             {
-                for (int h = 0; h < H; h++)
+                double[,] a; //Matriz de aulas
+                double[,,] i; //Matriz de indisponibilidades
+                int P, T, D, H; //Indices para Professor, Turma, Dia e Horário
+
+                lerArquivo(out a, out i, out P, out T, out D, out H, file);
+
+                Cplex model = new Cplex();
+
+                //*******************************************************
+                //  Define a variável de decisão e função objetivo
+                //
+                //*******************************************************
+                var x = new INumVar[D, H, T, P];
+
+                for (int d = 0; d < D; d++)
                 {
-                    for (int t = 0; t < T; t++)
+                    for (int h = 0; h < H; h++)
                     {
-                        for (int p = 0; p < P; p++)
-                        {
-                            //Variável de decisão binária
-                            //Para todo dhtp, X[dhtp] pertence {0, 1}
-                            x[d, h, t, p] = model.BoolVar();
-
-                        }
-                    }
-                }
-            }
-
-            // Add funcao objetivo para garantir que todas as aulas sejam dadas
-            var foTodasAsAulas = model.LinearNumExpr();
-
-            for (int d = 0; d < D; d++)
-            {
-                for (int h = 0; h < H; h++)
-                {
-                    for (int t = 0; t < T; t++)
-                    {
-                        for (int p = 0; p < P; p++)
-                        {
-
-                            // comeca gravacao aqui.
-                            foTodasAsAulas.AddTerm(1.0, x[d, h, t, p]);
-
-                        }
-                    }
-                }
-            }
-
-            
-
-            //*******************************************************
-            //  Adiciona as restrições do modelo
-            //
-            //*******************************************************
-
-            #region Restrições 1 e 2
-            // Restrições 1 e 2:
-            //
-            // Restrição 1:
-            // Um professor não pode ser alocado ao mesmo tempo em turmas diferentes
-            // Adiciona DxHxP restrições ao modelo
-            //
-            // Restricao 2:
-            // O professor nao pode ser alocado para dar aula
-            // quando ele esta indisponivel.
-            // E(t = 1 -> T) 1*Xdhpt = 0, para todo d, h, p, se i[d, h, p] = 1.
-
-
-
-
-
-            for (int d = 0; d < D; d++)
-            {
-                for (int h = 0; h < H; h++)
-                {
-                    for (int p = 0; p < P; p++)
-                    {
-                        ILinearNumExpr exp = model.LinearNumExpr();
-
                         for (int t = 0; t < T; t++)
                         {
-                            exp.AddTerm(1.0, x[d, h, t, p]);
-                        }
+                            for (int p = 0; p < P; p++)
+                            {
+                                //Variável de decisão binária
+                                //Para todo dhtp, X[dhtp] pertence {0, 1}
+                                x[d, h, t, p] = model.BoolVar();
 
-                        if (i[d, h, p] == 1)
-                        {
-                            //Restrição 2
-                            model.AddEq(exp, 0);
+                            }
                         }
-                        else
-                        {
-                            //Restrição 1
-                            model.AddLe(exp, 1);
-                        }
-
-
                     }
-
                 }
-            }
-            #endregion
 
-            #region Restrição 3
-            // Restrição 3: 
-            // A quantidade de aulas de cada professor por turma.
-            // e.g., Humberto, 7 periodo, 4 aulas de PO.
-            // Adiciona TxP restricoes ao modelo.
-            for (int t = 0; t < T; t++)
-            {
-                for (int p = 0; p < P; p++)
+                // Add funcao objetivo para garantir que todas as aulas sejam dadas
+                var foTodasAsAulas = model.LinearNumExpr();
+
+                for (int d = 0; d < D; d++)
                 {
-
-                    ILinearNumExpr exp = model.LinearNumExpr();
-
-                    // somatorio entre dia e horario.
-                    for (int d = 0; d < D; d++)
+                    for (int h = 0; h < H; h++)
                     {
-                        for (int h = 0; h < H; h++)
+                        for (int t = 0; t < T; t++)
                         {
+                            for (int p = 0; p < P; p++)
+                            {
 
-                            exp.AddTerm(1.0, x[d, h, t, p]);
+                                // comeca gravacao aqui.
+                                foTodasAsAulas.AddTerm(1.0, x[d, h, t, p]);
 
+                            }
                         }
                     }
-
-                    // O somatório tem que ser A[t][p],
-                    // que é o número de aula q o prof tem que
-                    // dar para uma turma.
-                    model.AddEq(exp, a[t, p]);
                 }
-            }
-            #endregion
 
-            #region Restrição 4
-            // Restrição 4:
-            // O professor leciona no máximo duas vezes em cada turma para cada dia
-            // (volta gravacao aqui)
-            for (int d = 0; d < D; d++)
-            {
+
+
+                //*******************************************************
+                //  Adiciona as restrições do modelo
+                //
+                //*******************************************************
+
+                #region Restrições 1 e 2
+                // Restrições 1 e 2:
+                //
+                // Restrição 1:
+                // Um professor não pode ser alocado ao mesmo tempo em turmas diferentes
+                // Adiciona DxHxP restrições ao modelo
+                //
+                // Restricao 2:
+                // O professor nao pode ser alocado para dar aula
+                // quando ele esta indisponivel.
+                // E(t = 1 -> T) 1*Xdhpt = 0, para todo d, h, p, se i[d, h, p] = 1.
+
+
+
+
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int h = 0; h < H; h++)
+                    {
+                        for (int p = 0; p < P; p++)
+                        {
+                            ILinearNumExpr exp = model.LinearNumExpr();
+
+                            for (int t = 0; t < T; t++)
+                            {
+                                exp.AddTerm(1.0, x[d, h, t, p]);
+                            }
+
+                            if (i[d, h, p] == 1)
+                            {
+                                //Restrição 2
+                                model.AddEq(exp, 0);
+                            }
+                            else
+                            {
+                                //Restrição 1
+                                model.AddLe(exp, 1);
+                            }
+
+
+                        }
+
+                    }
+                }
+                #endregion
+
+                #region Restrição 3
+                // Restrição 3: 
+                // A quantidade de aulas de cada professor por turma.
+                // e.g., Humberto, 7 periodo, 4 aulas de PO.
+                // Adiciona TxP restricoes ao modelo.
                 for (int t = 0; t < T; t++)
                 {
                     for (int p = 0; p < P; p++)
@@ -164,210 +140,255 @@ namespace Horarios
 
                         ILinearNumExpr exp = model.LinearNumExpr();
 
-                        // verifica p tds horarios se o prof
-                        // nao ta dando todas as aulas em uma turma so.
-                        // Limita a 2 aulas.
-                        for (int h = 0; h < H; h++)
+                        // somatorio entre dia e horario.
+                        for (int d = 0; d < D; d++)
                         {
+                            for (int h = 0; h < H; h++)
+                            {
 
-                            exp.AddTerm(1.0, x[d, h, t, p]);
+                                exp.AddTerm(1.0, x[d, h, t, p]);
 
+                            }
                         }
 
-                        // limita a duas aulas no mesmo dia mesma
-                        // turma e mesmo prof.
-                        model.AddLe(exp, 2);
+                        // O somatório tem que ser A[t][p],
+                        // que é o número de aula q o prof tem que
+                        // dar para uma turma.
+                        model.AddEq(exp, a[t, p]);
                     }
-
                 }
+                #endregion
 
-
-            }
-            #endregion
-
-            #region Restrição 5
-            // Restrição 5:
-            // Uma turma não pode ter mais de um professor no mesmo dia e horário
-            // Adiciona DxHxT restrições ao modelo
-            for (int d = 0; d < D; d++)
-            {
-                for (int h = 0; h < H; h++)
+                #region Restrição 4
+                // Restrição 4:
+                // O professor leciona no máximo duas vezes em cada turma para cada dia
+                // (volta gravacao aqui)
+                for (int d = 0; d < D; d++)
                 {
                     for (int t = 0; t < T; t++)
                     {
-                        ILinearNumExpr exp = model.LinearNumExpr();
-
                         for (int p = 0; p < P; p++)
                         {
 
-                            exp.AddTerm(1.0, x[d, h, t, p]);
+                            ILinearNumExpr exp = model.LinearNumExpr();
 
+                            // verifica p tds horarios se o prof
+                            // nao ta dando todas as aulas em uma turma so.
+                            // Limita a 2 aulas.
+                            for (int h = 0; h < H; h++)
+                            {
+
+                                exp.AddTerm(1.0, x[d, h, t, p]);
+
+                            }
+
+                            // limita a duas aulas no mesmo dia mesma
+                            // turma e mesmo prof.
+                            model.AddLe(exp, 2);
                         }
 
-                        // Um turma não pode ter no mesmo dia e horário mais de um professor alocado
-                        model.AddLe(exp, 1);
                     }
 
+
                 }
-            }
-            #endregion
+                #endregion
 
-            #region Restrição 6
-
-            // y[d,p] = num aulas prof P dia D.
-            var y = new INumVar[D, P];
-
-            for (int d = 0; d < D; d++)
-            {
-                for (int p = 0; p < P; p++)
+                #region Restrição 5
+                // Restrição 5:
+                // Uma turma não pode ter mais de um professor no mesmo dia e horário
+                // Adiciona DxHxT restrições ao modelo
+                for (int d = 0; d < D; d++)
                 {
-                    y[d, p] = model.BoolVar();
-                }
-            }
-
-
-            for (int d = 0; d < D; d++)
-            {
-                for (int p = 0; p < P; p++)
-                {
-                    var exp = model.LinearNumExpr();
-
                     for (int h = 0; h < H; h++)
                     {
                         for (int t = 0; t < T; t++)
                         {
-                            exp.AddTerm(1, x[d, h, t, p]);
+                            ILinearNumExpr exp = model.LinearNumExpr();
+
+                            for (int p = 0; p < P; p++)
+                            {
+
+                                exp.AddTerm(1.0, x[d, h, t, p]);
+
+                            }
+
+                            // Um turma não pode ter no mesmo dia e horário mais de um professor alocado
+                            model.AddLe(exp, 1);
                         }
+
                     }
-
-                    model.Add(model.IfThen(model.Eq(exp, 1), model.Eq(y[d, p], 1)));
-                    model.Add(model.IfThen(model.Eq(exp, 0), model.Eq(y[d, p], 0)));
-                    model.Add(model.IfThen(model.Ge(exp, 2), model.Eq(y[d, p], 0)));
-
                 }
-            }
-            #endregion
+                #endregion
 
-            //*******************************************************
-            //  Função objetivo para minimizar o número de aulas
-            //  isoladas
-            //
-            //*******************************************************
-            var foMinAulasIsolada = model.LinearNumExpr();
-            for (int p = 0; p < P; p++)
-            {
+                #region Restrição 6
+
+                // y[d,p] = num aulas prof P dia D.
+                var y = new INumVar[D, P];
+
                 for (int d = 0; d < D; d++)
                 {
-                    ILinearNumExpr exp = model.LinearNumExpr();
-
-                    for (int t = 0; t < T; t++)
+                    for (int p = 0; p < P; p++)
                     {
+                        y[d, p] = model.BoolVar();
+                    }
+                }
+
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        var exp = model.LinearNumExpr();
+
                         for (int h = 0; h < H; h++)
                         {
-                            exp.AddTerm(1.0, x[d, h, t, p]);
+                            for (int t = 0; t < T; t++)
+                            {
+                                exp.AddTerm(1, x[d, h, t, p]);
+                            }
                         }
+
+                        model.Add(model.IfThen(model.Eq(exp, 1), model.Eq(y[d, p], 1)));
+                        model.Add(model.IfThen(model.Eq(exp, 0), model.Eq(y[d, p], 0)));
+                        model.Add(model.IfThen(model.Ge(exp, 2), model.Eq(y[d, p], 0)));
+
+                    }
+                }
+                #endregion
+
+                //*******************************************************
+                //  Função objetivo para minimizar o número de aulas
+                //  isoladas
+                //
+                //*******************************************************
+                var foMinAulasIsolada = model.LinearNumExpr();
+                for (int p = 0; p < P; p++)
+                {
+                    for (int d = 0; d < D; d++)
+                    {
+                        ILinearNumExpr exp = model.LinearNumExpr();
+
+                        for (int t = 0; t < T; t++)
+                        {
+                            for (int h = 0; h < H; h++)
+                            {
+                                exp.AddTerm(1.0, x[d, h, t, p]);
+                            }
+                        }
+
+                        model.Add(model.IfThen(model.Eq(exp, 1), model.Eq(y[d, p], 1)));
+
+                        //Multiplica por -1 para 'puxar' para baixo as aulas isoladas
+                        //de forma que elas não apareçam, quando possível, na solução encontrada
+                        foMinAulasIsolada.AddTerm(-1, y[d, p]);
+
+                    }
+                }
+
+                //*******************************************************
+                //  Adiciona as funções objetivos ao modelo
+                //
+                //*******************************************************
+                model.AddMaximize(model.Sum(foMinAulasIsolada, foTodasAsAulas));
+
+
+                // Aulas isoladas: terca feira.
+                /*
+
+                E(i = 1, H) Zi = 1
+                (foto lousa)
+                (a img eh pra um dia e um professor).
+
+                (c5 - y)/5 = c5/5 - y/5
+                addTerm(1/5, c5);
+                addTerm(-1/5, y);
+
+
+                INumVar y = model.IntVar(0, 5);
+                INumVar z0 = model.BoolVar();
+                INumVar z1 = model.BoolVar();
+                INumVar z2 = model.BoolVar();
+                INumVar z3 = model.BoolVar();
+                INumVar z4 = model.BoolVar();
+                INumVar z5 = model.BoolVar();
+
+                INumVar C5 = model.IntVar(5, 5); model.AddEq(C5, 5);
+                INumVar C4 = model.IntVar(4, 4); model.AddEq(C4, 4);
+                INumVar C3 = model.IntVar(3, 3); model.AddEq(C3, 3);
+                INumVar C2 = model.IntVar(2, 2); model.AddEq(C2, 2);
+
+                ILinearNumExpr fo2 = model.LinearNumExpr();
+                fo2.AddTerm(1, z1);
+                model.AddMinimize(fo2);
+
+                model.AddEq(y, 0); // num aulas.
+                */
+
+
+                //foto 2: eh o somatrio Ydp = EE... da foto da lousa.
+                // o Z vale 1 se for aula isolada, caso contrario 0.
+                // relatorio da minimizacao dos 2 jeitos (lousa e foto do projetor).
+                // instancia X tantos segundos, tantas aulas.
+
+
+                // terca ^
+
+                var fileName = Path.GetFileNameWithoutExtension(file);
+                var outputStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
+                var writer = new StreamWriter(outputStream);
+
+
+                var sw = new Stopwatch();
+
+                sw.Start();
+
+                var solve = model.Solve();
+
+                sw.Stop();
+
+                Console.SetOut(writer);
+
+                Console.WriteLine("Solving time: " + sw.Elapsed.TotalSeconds + ".");
+
+                //Solver the problem
+                if (solve)
+                {
+                    Console.WriteLine("Solution status = " + model.GetStatus());
+                    Console.WriteLine("--------------------------------------------");
+                    Console.WriteLine();
+                    Console.WriteLine("Solution found:");
+                    Console.WriteLine(" Objective value = " + model.ObjValue);
+                    Console.WriteLine(" DxHxT = {0}", D * H * T);
+                    Console.WriteLine();
+
+                    Console.WriteLine();
+                    Console.WriteLine("Mostrar agenda dos professores? [y/n]");
+                    var key = Console.ReadKey(true);
+                    if (key.Key.Equals(ConsoleKey.Y))
+                    {
+                        exibirTabelasProfessores(P, T, D, H, model, x, y);
                     }
 
-                    model.Add(model.IfThen(model.Eq(exp, 1), model.Eq(y[d, p], 1)));
-
-                    //Multiplica por -1 para 'puxar' para baixo as aulas isoladas
-                    //de forma que elas não apareçam, quando possível, na solução encontrada
-                    foMinAulasIsolada.AddTerm(-1, y[d, p]);
-
+                    Console.WriteLine();
+                    Console.WriteLine("Mostrar agenda das turmas? [y/n]");
+                    key = Console.ReadKey(true);
+                    if (key.Key.Equals(ConsoleKey.Y))
+                    {
+                        exibirTabelasTurmas(P, T, D, H, model, x);
+                    }
                 }
-            }
-
-            //*******************************************************
-            //  Adiciona as funções objetivos ao modelo
-            //
-            //*******************************************************
-            model.AddMaximize(model.Sum(foMinAulasIsolada, foTodasAsAulas));
-            
-
-            // Aulas isoladas: terca feira.
-            /*
-
-            E(i = 1, H) Zi = 1
-            (foto lousa)
-            (a img eh pra um dia e um professor).
-
-            (c5 - y)/5 = c5/5 - y/5
-            addTerm(1/5, c5);
-            addTerm(-1/5, y);
-            
-
-            INumVar y = model.IntVar(0, 5);
-            INumVar z0 = model.BoolVar();
-            INumVar z1 = model.BoolVar();
-            INumVar z2 = model.BoolVar();
-            INumVar z3 = model.BoolVar();
-            INumVar z4 = model.BoolVar();
-            INumVar z5 = model.BoolVar();
-
-            INumVar C5 = model.IntVar(5, 5); model.AddEq(C5, 5);
-            INumVar C4 = model.IntVar(4, 4); model.AddEq(C4, 4);
-            INumVar C3 = model.IntVar(3, 3); model.AddEq(C3, 3);
-            INumVar C2 = model.IntVar(2, 2); model.AddEq(C2, 2);
-
-            ILinearNumExpr fo2 = model.LinearNumExpr();
-            fo2.AddTerm(1, z1);
-            model.AddMinimize(fo2);
-
-            model.AddEq(y, 0); // num aulas.
-            */
-
-
-            //foto 2: eh o somatrio Ydp = EE... da foto da lousa.
-            // o Z vale 1 se for aula isolada, caso contrario 0.
-            // relatorio da minimizacao dos 2 jeitos (lousa e foto do projetor).
-            // instancia X tantos segundos, tantas aulas.
-
-
-            // terca ^
-
-            //var outputStream = new FileStream("aulas.txt", FileMode.OpenOrCreate, FileAccess.Write);
-            //var writer = new StreamWriter(outputStream);
-
-            //Solver the problem
-            if (model.Solve())
-            {
-                Console.WriteLine("Solution status = " + model.GetStatus());
-                Console.WriteLine("--------------------------------------------");
-                Console.WriteLine();
-                Console.WriteLine("Solution found:");
-                Console.WriteLine(" Objective value = " + model.ObjValue);
-                Console.WriteLine(" DxHxT = {0}", D * H * T);
-                Console.WriteLine();
-
-                //Console.SetOut(writer);
-
-                Console.WriteLine();
-                Console.WriteLine("Mostrar agenda dos professores? [y/n]");
-                var key = Console.ReadKey(true);
-                if (key.Key.Equals(ConsoleKey.Y))
-                {
-                    exibirTabelasProfessores(P, T, D, H, model, x, y);
+                else {
+                    Console.WriteLine("No solution found.");
+                    Console.WriteLine("Solution status: " + model.GetStatus());
                 }
 
-                Console.WriteLine();
-                Console.WriteLine("Mostrar agenda das turmas? [y/n]");
-                key = Console.ReadKey(true);
-                if (key.Key.Equals(ConsoleKey.Y))
-                {
-                    exibirTabelasTurmas(P, T, D, H, model, x);
-                }
+                //Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
+                //Console.ReadKey();
+                Console.Out.Flush();
+                writer.Dispose();
+                outputStream.Dispose();
+                Console.SetOut(stdout);
             }
-            else {
-                Console.WriteLine(" No solution found ");
-                Console.WriteLine("Solution status=" + model.GetStatus());
-            }
-
-            Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
-            Console.ReadKey();
-            //Console.Out.Flush();
-            //writer.Dispose();
-            //outputStream.Dispose();
-
         }
 
         #region Métodos para exibir as tabelas no console
@@ -493,7 +514,7 @@ namespace Horarios
         #region Leitura de arquivo
         private static void lerArquivo(out double[,] a, out double[,,] i, out int P, out int T, out int D, out int H, string fileName)
         {
-            var lines = System.IO.File.ReadAllLines(@"./horarios/" + fileName);
+            var lines = System.IO.File.ReadAllLines(fileName);
 
             lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
 
