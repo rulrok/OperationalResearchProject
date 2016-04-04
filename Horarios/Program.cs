@@ -331,17 +331,6 @@ namespace Horarios
             //Solver the problem
             if (model.Solve())
             {
-                for (int d = 0; d < D; d++)
-                {
-                    for (int p = 0; p < P; p++)
-                    {
-                        if (model.GetValue(y[d, p]) == 1)
-                        {
-                            Console.WriteLine("Professor {0} no dia {1} tem aula isolada!", p, d);
-                        }
-                    }
-                }
-
                 Console.WriteLine("Solution status = " + model.GetStatus());
                 Console.WriteLine("--------------------------------------------");
                 Console.WriteLine();
@@ -357,7 +346,7 @@ namespace Horarios
                 var key = Console.ReadKey(true);
                 if (key.Key.Equals(ConsoleKey.Y))
                 {
-                    exibirTabelasProfessores(P, T, D, H, model, x);
+                    exibirTabelasProfessores(P, T, D, H, model, x, y);
                 }
 
                 Console.WriteLine();
@@ -383,7 +372,7 @@ namespace Horarios
 
         #region Métodos para exibir as tabelas no console
 
-        private static void exibirTabelasProfessores(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
+        private static void exibirTabelasProfessores(int P, int T, int D, int H, Cplex model, INumVar[,,,] x, INumVar[,] y)
         {
             for (int p = 0; p < P; p++)
             {
@@ -434,6 +423,17 @@ namespace Horarios
                 Console.WriteLine("+---------------------------------------+");
 
             } //For P
+
+            for (int d = 0; d < D; d++)
+            {
+                for (int p = 0; p < P; p++)
+                {
+                    if (model.GetValue(y[d, p]) == 1)
+                    {
+                        Console.WriteLine("Professor {0} no dia {1} tem aula isolada!", p, d);
+                    }
+                }
+            }
         }
 
         private static void exibirTabelasTurmas(int P, int T, int D, int H, Cplex model, INumVar[,,,] x)
