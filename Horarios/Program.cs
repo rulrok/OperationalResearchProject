@@ -46,8 +46,8 @@ namespace Horarios
                 }
             }
 
-            // Add funcao objetivo.
-            var fo = model.LinearNumExpr();
+            // Add funcao objetivo para garantir que todas as aulas sejam dadas
+            var foTodasAsAulas = model.LinearNumExpr();
 
             for (int d = 0; d < D; d++)
             {
@@ -59,14 +59,14 @@ namespace Horarios
                         {
 
                             // comeca gravacao aqui.
-                            fo.AddTerm(1.0, x[d, h, t, p]);
+                            foTodasAsAulas.AddTerm(1.0, x[d, h, t, p]);
 
                         }
                     }
                 }
             }
 
-            model.AddMaximize(fo);
+            
 
             //*******************************************************
             //  Adiciona as restrições do modelo
@@ -246,36 +246,43 @@ namespace Horarios
 
                 }
             }
+            #endregion
 
-
-            IIntVar[,] Z = new IIntVar[P, D];
+            //*******************************************************
+            //  Função objetivo para minimizar o número de aulas
+            //  isoladas
+            //
+            //*******************************************************
+            var foMinAulasIsolada = model.LinearNumExpr();
             for (int p = 0; p < P; p++)
             {
                 for (int d = 0; d < D; d++)
                 {
-                    Z[p, d] = model.BoolVar();
-                    ILinearNumExpr expIsolada = model.LinearNumExpr();
+                    ILinearNumExpr exp = model.LinearNumExpr();
 
                     for (int t = 0; t < T; t++)
                     {
                         for (int h = 0; h < H; h++)
                         {
-                            expIsolada.AddTerm(1.0, x[d, h, t, p]);
+                            exp.AddTerm(1.0, x[d, h, t, p]);
                         }
                     }
 
-                    //model.Add(model.IfThen(
-                    //    model.Eq(expIsolada, 1)
-                    //    , model.Eq(Z[p, d], 1))
-                    //    );
-                    //fo.AddTerm(1, Z[d, p]);
+                    model.Add(model.IfThen(model.Eq(exp, 1), model.Eq(y[d, p], 1)));
+
+                    //Multiplica por -1 para 'puxar' para baixo as aulas isoladas
+                    //de forma que elas não apareçam, quando possível, na solução encontrada
+                    foMinAulasIsolada.AddTerm(-1, y[d, p]);
 
                 }
-
-
             }
-            #endregion
 
+            //*******************************************************
+            //  Adiciona as funções objetivos ao modelo
+            //
+            //*******************************************************
+            model.AddMaximize(model.Sum(foMinAulasIsolada, foTodasAsAulas));
+            
 
             // Aulas isoladas: terca feira.
             /*
