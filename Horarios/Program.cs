@@ -189,7 +189,7 @@ namespace Horarios
 
                             // limita a duas aulas no mesmo dia mesma
                             // turma e mesmo prof.
-                            model.AddLe(exp, l[p,t] > 0 ? l[p,t] : 2);
+                            model.AddLe(exp, l[p, t] > 0 ? l[p, t] : 2);
                         }
 
                     }
@@ -257,6 +257,43 @@ namespace Horarios
                         model.Add(model.IfThen(model.Eq(exp, 0), model.Eq(y[d, p], 0)));
                         model.Add(model.IfThen(model.Ge(exp, 2), model.Eq(y[d, p], 0)));
 
+                    }
+                }
+                #endregion
+
+                #region Restrição 7
+
+                // w[d, p, t] = num aulas prof P dia D.
+                var w = new INumVar[D, P, T];
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            w[d, p, t] = model.BoolVar();
+                        }
+                    }
+                }
+
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            var exp = model.LinearNumExpr();
+
+                            for (int h = 0; h < H; h++)
+                            {
+                                exp.AddTerm(1, x[d, h, t, p]);
+                            }
+
+                            model.Add(model.IfThen(model.Ge(exp, 1), model.Eq(w[d, p, t], 1)));
+                            model.Add(model.IfThen(model.Eq(exp, 0), model.Eq(w[d, p, t], 0)));
+                        }
                     }
                 }
                 #endregion
@@ -562,12 +599,13 @@ namespace Horarios
                     //secondNumber = Turma
                     //thirdNumber = horas
                     a[secondNumber, firstNumber] = thirdNumber;
-                } else if (columns[0].Equals("l"))
+                }
+                else if (columns[0].Equals("l"))
                 {
                     //firstNumber = professor
                     //secondNumber = Turma
                     //thirdNumber = limite
-                    l[firstNumber, secondNumber ] = thirdNumber;
+                    l[firstNumber, secondNumber] = thirdNumber;
 
                 }
 
