@@ -299,6 +299,30 @@ namespace Horarios
                         }
                     }
                 }
+
+                for (int p1 = 0; p1 < P; p1++)
+                {
+                    for (int p2 = 0; p2 < P; p2++)
+                    {
+                        if (r[p1, p2] > -1)
+                        {
+                            //Se existir uma restrição para esses dois professores
+                            //
+
+                            var exp = model.LinearNumExpr();
+                            Int32 turma = (Int32)r[p1, p2];
+
+                            for (int d = 0; d < D; d++)
+                            {
+                                exp.AddTerm(1.0, w[d, p1, turma]);
+                                exp.AddTerm(1.0, w[d, p2, turma]);
+                            }
+                            //Adiciona a restrição para os professores
+                            model.AddLe(exp, 1);
+                        }
+                    }
+                }
+
                 #endregion
 
                 //*******************************************************
@@ -557,7 +581,7 @@ namespace Horarios
         #endregion
 
         #region Leitura de arquivo
-        private static void lerArquivo(out double[,] a, out double[,,] i, out double[,] l, out double [,] r, out int P, out int T, out int D, out int H, string fileName)
+        private static void lerArquivo(out double[,] a, out double[,,] i, out double[,] l, out double[,] r, out int P, out int T, out int D, out int H, string fileName)
         {
             var lines = System.IO.File.ReadAllLines(fileName);
 
@@ -581,6 +605,13 @@ namespace Horarios
 
             //Matriz de restrições de professores no mesmo dia
             r = new double[P, P];
+            for (int p1 = 0; p1 < P; p1++)
+            {
+                for (int p2 = 0; p2 < P; p2++)
+                {
+                    r[p1, p2] = -1;
+                }
+            }
 
             //As três primeiras linhas do arquivo contém os cabeçalhos
             //portanto começamos o count a partir de 3
@@ -613,7 +644,8 @@ namespace Horarios
                     //thirdNumber = limite
                     l[firstNumber, secondNumber] = thirdNumber;
 
-                } else if (columns[0].Equals("r"))
+                }
+                else if (columns[0].Equals("r"))
                 {
                     //firstNumber = professor 1
                     //secondNumber = professor 2
