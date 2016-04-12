@@ -23,10 +23,10 @@ namespace Horarios
 
             foreach (var file in files)
             {
-                //if (Path.GetFileNameWithoutExtension(file) != "5_turmas2")
-                //{
-                //    continue;
-                //}
+                if (Path.GetFileNameWithoutExtension(file) != "nilda36")
+                {
+                    continue;
+                }
 
                 int[,] a; //Matriz de aulas
                 int[,,] i; //Matriz de indisponibilidades
@@ -304,21 +304,30 @@ namespace Horarios
                 {
                     for (int p2 = 0; p2 < P; p2++)
                     {
+                        if (p2 == p1)
+                        {
+                            continue;
+                        }
+
                         if (r[p1, p2] > -1)
                         {
                             //Se existir uma restrição para esses dois professores
                             //
 
-                            var exp = model.LinearNumExpr();
+                            
                             var turma = r[p1, p2];
 
                             for (int d = 0; d < D; d++)
                             {
+                                var exp = model.LinearNumExpr();
+
                                 exp.AddTerm(1.0, w[d, p1, turma]);
                                 exp.AddTerm(1.0, w[d, p2, turma]);
+
+                                //Adiciona a restrição para os professores
+                                model.AddLe(exp, 1);
                             }
-                            //Adiciona a restrição para os professores
-                            model.AddLe(exp, 1);
+                            
                         }
                     }
                 }
@@ -452,7 +461,7 @@ namespace Horarios
                 }
 
                 //Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
-                //Console.ReadKey();
+                Console.ReadKey();
                 Console.Out.Flush();
                 writer.Dispose();
                 outputStream.Dispose();
@@ -622,6 +631,12 @@ namespace Horarios
                 int firstNumber = int.Parse(columns[1]);
                 int secondNumber = int.Parse(columns[2]);
                 int thirdNumber = int.Parse(columns[3]);
+
+                //Permite comentários nas linhas do arquivo
+                if (columns[0].StartsWith("#"))
+                {
+                    continue;
+                }
 
                 if (columns[0].Equals("i"))
                 {
