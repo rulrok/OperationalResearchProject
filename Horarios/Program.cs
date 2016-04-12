@@ -23,6 +23,10 @@ namespace Horarios
 
             foreach (var file in files)
             {
+                //if (Path.GetFileNameWithoutExtension(file) != "5_turmas2")
+                //{
+                //    continue;
+                //}
                 double[,] a; //Matriz de aulas
                 double[,,] i; //Matriz de indisponibilidades
                 double[,] l;
@@ -185,7 +189,7 @@ namespace Horarios
 
                             // limita a duas aulas no mesmo dia mesma
                             // turma e mesmo prof.
-                            model.AddLe(exp, 2);
+                            model.AddLe(exp, l[p,t] > 0 ? l[p,t] : 2);
                         }
 
                     }
