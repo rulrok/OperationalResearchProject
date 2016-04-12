@@ -25,9 +25,10 @@ namespace Horarios
             {
                 double[,] a; //Matriz de aulas
                 double[,,] i; //Matriz de indisponibilidades
+                double[,] l;
                 int P, T, D, H; //Indices para Professor, Turma, Dia e Horário
 
-                lerArquivo(out a, out i, out P, out T, out D, out H, file);
+                lerArquivo(out a, out i, out l, out P, out T, out D, out H, file);
 
                 Cplex model = new Cplex();
 
@@ -512,7 +513,7 @@ namespace Horarios
         #endregion
 
         #region Leitura de arquivo
-        private static void lerArquivo(out double[,] a, out double[,,] i, out int P, out int T, out int D, out int H, string fileName)
+        private static void lerArquivo(out double[,] a, out double[,,] i, out double[,] l, out int P, out int T, out int D, out int H, string fileName)
         {
             var lines = System.IO.File.ReadAllLines(fileName);
 
@@ -530,6 +531,9 @@ namespace Horarios
             // matriz de indisponibilidade.
             // No dia D, no horário H, o professor P está indisponível (1) ou não (0)
             i = new double[D, H, P];
+
+            // matriz de limites de aulas
+            l = new double[P, T];
 
             //As três primeiras linhas do arquivo contém os cabeçalhos
             //portanto começamos o count a partir de 3
@@ -554,6 +558,13 @@ namespace Horarios
                     //secondNumber = Turma
                     //thirdNumber = horas
                     a[secondNumber, firstNumber] = thirdNumber;
+                } else if (columns[0].Equals("l"))
+                {
+                    //firstNumber = professor
+                    //secondNumber = Turma
+                    //thirdNumber = limite
+                    l[firstNumber, secondNumber ] = thirdNumber;
+
                 }
 
             }
