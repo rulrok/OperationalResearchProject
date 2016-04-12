@@ -28,10 +28,10 @@ namespace Horarios
                 //    continue;
                 //}
 
-                double[,] a; //Matriz de aulas
-                double[,,] i; //Matriz de indisponibilidades
-                double[,] l; //Matriz de limitações de aulas
-                double[,] r; //Matriz de restrições de aulas entre professores
+                int[,] a; //Matriz de aulas
+                int[,,] i; //Matriz de indisponibilidades
+                int[,] l; //Matriz de limitações de aulas
+                int[,] r; //Matriz de restrições de aulas entre professores
 
                 int P, T, D, H; //Indices para Professor, Turma, Dia e Horário
 
@@ -310,7 +310,7 @@ namespace Horarios
                             //
 
                             var exp = model.LinearNumExpr();
-                            Int32 turma = (Int32)r[p1, p2];
+                            var turma = r[p1, p2];
 
                             for (int d = 0; d < D; d++)
                             {
@@ -581,7 +581,7 @@ namespace Horarios
         #endregion
 
         #region Leitura de arquivo
-        private static void lerArquivo(out double[,] a, out double[,,] i, out double[,] l, out double[,] r, out int P, out int T, out int D, out int H, string fileName)
+        private static void lerArquivo(out int[,] a, out int[,,] i, out int[,] l, out int[,] r, out int P, out int T, out int D, out int H, string fileName)
         {
             var lines = System.IO.File.ReadAllLines(fileName);
 
@@ -594,17 +594,17 @@ namespace Horarios
 
             // matriz Aulas[t,p] de necessidade de aulas.
             // turma T prof P tem que dar A aulas.
-            a = new double[T, P];
+            a = new int[T, P];
 
             // matriz de indisponibilidade.
             // No dia D, no horário H, o professor P está indisponível (1) ou não (0)
-            i = new double[D, H, P];
+            i = new int[D, H, P];
 
             // matriz de limites de aulas
-            l = new double[P, T];
+            l = new int[P, T];
 
             //Matriz de restrições de professores no mesmo dia
-            r = new double[P, P];
+            r = new int[P, P];
             for (int p1 = 0; p1 < P; p1++)
             {
                 for (int p2 = 0; p2 < P; p2++)
