@@ -75,14 +75,16 @@ namespace Horarios
                             {
 
                                 // comeca gravacao aqui.
-                                foTodasAsAulas.AddTerm(1.0, x[d, h, t, p]);
+                                foTodasAsAulas.AddTerm(10.0, x[d, h, t, p]);
 
                             }
                         }
                     }
                 }
 
-
+                // Primeiro tratar germinacao;
+                // Segundo tratar aulas isoladas;
+                // Terceiro resto das restricoes;
 
                 //*******************************************************
                 //  Adiciona as restrições do modelo
@@ -334,6 +336,72 @@ namespace Horarios
 
                 #endregion
 
+
+                #region Germinada
+
+                // O professor nao da aulas esparsas.
+                //
+                // i   D      D
+                // 0:  1      1
+                // 1:  -  =>  1
+                // 2:  1      -
+                //    ...    ...
+                //
+                // Testar do par para o impar (0 -> 1, 2 -> 3, etc).
+                // Nao testar 1 -> 2, 3 -> 4 etc.
+
+                // H = 5 -> B = 3
+                // H = 4 -> B = 2
+                int B = (int)Math.Ceiling(H / 2.0);
+
+                var g = new INumVar[D, B, T, P];
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int b = 0; b < B; b++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            for (int p = 0; p < P; p++)
+                            {                            
+                                g[d, b, t, p] = model.BoolVar();
+                            }
+                        }
+                    }
+                }
+
+                var foGerminada = model.LinearNumExpr();
+                for (int d = 0; d < D; d++)
+                {
+                    for (int t = 0; t < T; t++)
+                    {
+                        for (int p = 0; p < P; p++)
+                        {
+                            var b = 0;
+
+                            for (int h = 0; h < H/2; h+= 2)
+                            {
+                                var exp = model.LinearNumExpr();
+
+                                exp.AddTerm(1.0, x[d, h, t, p]);
+                                exp.AddTerm(1.0, x[d, h+1, t, p]);
+
+                                model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
+                                model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
+
+                                foGerminada.AddTerm(0.01, g[d, b, t, p]);
+
+                                b++;
+                            }
+
+                        }
+
+                    }
+                }
+
+
+                #endregion
+
                 //*******************************************************
                 //  Função objetivo para minimizar o número de aulas
                 //  isoladas
@@ -364,52 +432,13 @@ namespace Horarios
                 }
 
                 //*******************************************************
-                //  Adiciona as funções objetivos ao modelo
+                //  Adiciona as funções objetivos ao modelo foTodasAsAulas
                 //
                 //*******************************************************
-                model.AddMaximize(model.Sum(foMinAulasIsolada, foTodasAsAulas));
+                //model.AddMaximize(model.Sum(foMinAulasIsolada, foTodasAsAulas));
+                // model.AddMaximize(model.Sum(foMinAulasIsolada, foGerminada));
+                model.AddMaximize(model.Sum(model.Sum(foMinAulasIsolada, foGerminada), foTodasAsAulas));
 
-
-                // Aulas isoladas: terca feira.
-                /*
-
-                E(i = 1, H) Zi = 1
-                (foto lousa)
-                (a img eh pra um dia e um professor).
-
-                (c5 - y)/5 = c5/5 - y/5
-                addTerm(1/5, c5);
-                addTerm(-1/5, y);
-
-
-                INumVar y = model.IntVar(0, 5);
-                INumVar z0 = model.BoolVar();
-                INumVar z1 = model.BoolVar();
-                INumVar z2 = model.BoolVar();
-                INumVar z3 = model.BoolVar();
-                INumVar z4 = model.BoolVar();
-                INumVar z5 = model.BoolVar();
-
-                INumVar C5 = model.IntVar(5, 5); model.AddEq(C5, 5);
-                INumVar C4 = model.IntVar(4, 4); model.AddEq(C4, 4);
-                INumVar C3 = model.IntVar(3, 3); model.AddEq(C3, 3);
-                INumVar C2 = model.IntVar(2, 2); model.AddEq(C2, 2);
-
-                ILinearNumExpr fo2 = model.LinearNumExpr();
-                fo2.AddTerm(1, z1);
-                model.AddMinimize(fo2);
-
-                model.AddEq(y, 0); // num aulas.
-                */
-
-
-                //foto 2: eh o somatrio Ydp = EE... da foto da lousa.
-                // o Z vale 1 se for aula isolada, caso contrario 0.
-                // relatorio da minimizacao dos 2 jeitos (lousa e foto do projetor).
-                // instancia X tantos segundos, tantas aulas.
-
-
-                // terca ^
 
                 var fileName = Path.GetFileNameWithoutExtension(file);
                 var outputStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
