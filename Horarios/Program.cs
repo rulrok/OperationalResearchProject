@@ -40,7 +40,7 @@ namespace Horarios
                 Cplex model = new Cplex();
 
                 //*******************************************************
-                //  Define a variável de decisão e função objetivo
+                //  Define a variável de decisão
                 //
                 //*******************************************************
                 var x = new INumVar[D, H, T, P];
@@ -56,26 +56,6 @@ namespace Horarios
                                 //Variável de decisão binária
                                 //Para todo dhtp, X[dhtp] pertence {0, 1}
                                 x[d, h, t, p] = model.BoolVar();
-
-                            }
-                        }
-                    }
-                }
-
-                // Add funcao objetivo para garantir que todas as aulas sejam dadas
-                var foTodasAsAulas = model.LinearNumExpr();
-
-                for (int d = 0; d < D; d++)
-                {
-                    for (int h = 0; h < H; h++)
-                    {
-                        for (int t = 0; t < T; t++)
-                        {
-                            for (int p = 0; p < P; p++)
-                            {
-
-                                // comeca gravacao aqui.
-                                foTodasAsAulas.AddTerm(10.0, x[d, h, t, p]);
 
                             }
                         }
@@ -336,7 +316,6 @@ namespace Horarios
 
                 #endregion
 
-
                 #region Germinada
 
                 // O professor nao da aulas esparsas.
@@ -370,37 +349,33 @@ namespace Horarios
                     }
                 }
 
-                var foGerminada = model.LinearNumExpr();
-                for (int d = 0; d < D; d++)
-                {
-                    for (int t = 0; t < T; t++)
-                    {
-                        for (int p = 0; p < P; p++)
-                        {
-                            var b = 0;
-
-                            for (int h = 0; h < H/2; h+= 2)
-                            {
-                                var exp = model.LinearNumExpr();
-
-                                exp.AddTerm(1.0, x[d, h, t, p]);
-                                exp.AddTerm(1.0, x[d, h+1, t, p]);
-
-                                model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
-                                model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
-
-                                foGerminada.AddTerm(0.01, g[d, b, t, p]);
-
-                                b++;
-                            }
-
-                        }
-
-                    }
-                }
-
 
                 #endregion
+
+                #region Funções objetivos
+                //*******************************************************
+                //  Função objetivo para garantir que todas as aulas
+                //  sejam dadas
+                //
+                //*******************************************************
+                var foTodasAsAulas = model.LinearNumExpr();
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int h = 0; h < H; h++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            for (int p = 0; p < P; p++)
+                            {
+
+                                // comeca gravacao aqui.
+                                foTodasAsAulas.AddTerm(10.0, x[d, h, t, p]);
+
+                            }
+                        }
+                    }
+                }
 
                 //*******************************************************
                 //  Função objetivo para minimizar o número de aulas
@@ -431,14 +406,46 @@ namespace Horarios
                     }
                 }
 
+                //*********************************************************
+                //  Função objetivo para tentar maximizar aulas germinadas
+                //
+                //*********************************************************
+                var foGerminada = model.LinearNumExpr();
+                for (int d = 0; d < D; d++)
+                {
+                    for (int t = 0; t < T; t++)
+                    {
+                        for (int p = 0; p < P; p++)
+                        {
+                            var b = 0;
+
+                            for (int h = 0; h < H / 2; h += 2)
+                            {
+                                var exp = model.LinearNumExpr();
+
+                                exp.AddTerm(1.0, x[d, h, t, p]);
+                                exp.AddTerm(1.0, x[d, h + 1, t, p]);
+
+                                model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
+                                model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
+
+                                foGerminada.AddTerm(0.1, g[d, b, t, p]);
+
+                                b++;
+                            }
+
+                        }
+
+                    }
+                }
+
                 //*******************************************************
                 //  Adiciona as funções objetivos ao modelo foTodasAsAulas
                 //
                 //*******************************************************
-                //model.AddMaximize(model.Sum(foMinAulasIsolada, foTodasAsAulas));
-                // model.AddMaximize(model.Sum(foMinAulasIsolada, foGerminada));
-                model.AddMaximize(model.Sum(model.Sum(foMinAulasIsolada, foGerminada), foTodasAsAulas));
+                model.AddMaximize(model.Sum(foMinAulasIsolada, foGerminada, foTodasAsAulas));
 
+                #endregion
 
                 var fileName = Path.GetFileNameWithoutExtension(file);
                 var outputStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
