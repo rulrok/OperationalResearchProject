@@ -316,7 +316,7 @@ namespace Horarios
 
                 #endregion
 
-                #region Germinada
+                #region Geminada
 
                 // O professor nao da aulas esparsas.
                 //
@@ -407,10 +407,10 @@ namespace Horarios
                 }
 
                 //*********************************************************
-                //  Função objetivo para tentar maximizar aulas germinadas
+                //  Função objetivo para tentar maximizar aulas geminadas
                 //
                 //*********************************************************
-                var foGerminada = model.LinearNumExpr();
+                var foGeminada = model.LinearNumExpr();
                 for (int d = 0; d < D; d++)
                 {
                     for (int t = 0; t < T; t++)
@@ -429,7 +429,7 @@ namespace Horarios
                                 model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
                                 model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
 
-                                foGerminada.AddTerm(0.1, g[d, b, t, p]);
+                                foGeminada.AddTerm(0.1, g[d, b, t, p]);
 
                                 b++;
                             }
@@ -443,7 +443,7 @@ namespace Horarios
                 //  Adiciona as funções objetivos ao modelo foTodasAsAulas
                 //
                 //*******************************************************
-                model.AddMaximize(model.Sum(foMinAulasIsolada, foGerminada, foTodasAsAulas));
+                model.AddMaximize(model.Sum(foMinAulasIsolada, foGeminada, foTodasAsAulas));
 
                 #endregion
 
