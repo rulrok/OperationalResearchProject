@@ -357,8 +357,8 @@ namespace Horarios
 
                 Dictionary<string, double> weights = new Dictionary<string, double>();
                 weights.Add("todasAulas", 1.0);
-                weights.Add("geminadas", 0.01);
-                weights.Add("isoladas", -1.0);
+                weights.Add("geminadas", 0.5);
+                weights.Add("isoladas", -0.5);
 
 
                 //*******************************************************
@@ -469,8 +469,8 @@ namespace Horarios
 
                 var fileName = Path.GetFileNameWithoutExtension(file);
                 var stdOutputStream = Console.Out;
-                var outputStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
-                var fileOutputStream = new StreamWriter(outputStream);
+                var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.Truncate, FileAccess.Write);
+                var fileOutputStream = new StreamWriter(fileStream);
 
 
                 var sw = new Stopwatch();
@@ -478,6 +478,7 @@ namespace Horarios
                 sw.Start();
 
                 model.SetParam(Cplex.IntParam.TimeLimit, 60);
+                model.SetParam(Cplex.IntParam.IntSolLim, 1);
                 var solve = model.Solve();
 
                 sw.Stop();
@@ -522,13 +523,15 @@ namespace Horarios
                     Console.WriteLine("Solution status: " + model.GetStatus());
                 }
 
-                Console.SetOut(stdOutputStream);
-                Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
-                Console.ReadKey();
+                //Close file
                 Console.Out.Flush();
                 fileOutputStream.Dispose();
-                outputStream.Dispose();
+                fileStream.Dispose();
+
+                //Close console
                 Console.SetOut(stdOutputStream);
+                Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
+                Console.ReadKey(true);
             }
         }
 
@@ -566,9 +569,6 @@ namespace Horarios
                                 //Não fazemos nada por enquanto
 
                             }
-                            else {
-                                Console.WriteLine("Modelo inconsistente");
-                            }
                         }
                         if (turmasLecionadasNoMesmoMomento == 0)
                         {
@@ -576,7 +576,7 @@ namespace Horarios
                         }
                         else if (turmasLecionadasNoMesmoMomento > 1)
                         {
-                            Console.WriteLine("Modelo inconsistente");
+                            Console.Write(" M.I. |");
                         }
 
                     } //For D
@@ -630,9 +630,6 @@ namespace Horarios
                                 //Não fazemos nada por enquanto
 
                             }
-                            else {
-                                Console.WriteLine("Modelo inconsistente");
-                            }
                         }
                         if (turmasLecionadasNoMesmoMomento == 0)
                         {
@@ -640,7 +637,7 @@ namespace Horarios
                         }
                         else if (turmasLecionadasNoMesmoMomento > 1)
                         {
-                            Console.WriteLine("Modelo inconsistente");
+                            Console.Write(" M.I. |");
                         }
 
                     } //For D
