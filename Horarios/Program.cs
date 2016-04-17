@@ -354,19 +354,39 @@ namespace Horarios
                 #endregion
 
                 #region Janelas
-                var j = new INumVar[D, B, T, P];
+                var j = new INumVar[P, D];
 
-                for (int d = 0; d < D; d++)
+                for (int p = 0; p < P; p++)
                 {
-                    for (int t = 0; t < T; t++)
+                    for (int d = 0; d < D; d++)
                     {
-                        for (int p = 0; p < P; p++)
+
+                        j[p, d] = model.BoolVar();
+
+                    }
+
+                }
+
+                for (int p = 0; p < P; p++)
+                {
+                    for (int d = 0; d < D; d++)
+                    {
+                        var blocosExp = model.LinearNumExpr();
+                        var turmaBlocoExp = model.LinearNumExpr();
+                        for (int t = 0; t < T; t++)
                         {
+
                             for (int h = 0; h < H; h++)
                             {
-                                j[d, t, p, h] = model.BoolVar();
+                                turmaBlocoExp.AddTerm(1, x[d, h, t, p]);
+                                var asdf = a[t, p];
                             }
+
+                            blocosExp.Add(turmaBlocoExp);
+                            turmaBlocoExp = model.LinearNumExpr();
                         }
+
+                        model.IfThen(model.Ge(blocosExp, 1), model.Eq(j[p, d], 1));
                     }
                 }
                 #endregion
