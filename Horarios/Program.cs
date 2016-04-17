@@ -357,8 +357,8 @@ namespace Horarios
 
                 Dictionary<string, double> weights = new Dictionary<string, double>();
                 weights.Add("todasAulas", 1.0);
-                weights.Add("geminadas", 0.5);
-                weights.Add("isoladas", -0.5);
+                weights.Add("geminadas", .5);
+                weights.Add("isoladas", -1);
 
 
                 //*******************************************************
@@ -477,15 +477,19 @@ namespace Horarios
 
                 sw.Start();
 
-                model.SetParam(Cplex.IntParam.TimeLimit, 60);
-                model.SetParam(Cplex.IntParam.IntSolLim, 1);
+                //Define um tempo máximo em segundos para o cplex
+                model.SetParam(Cplex.IntParam.TimeLimit,  20 * 60);
+
+                //Pára o cplex ao encontrar a primeira solução 
+                //model.SetParam(Cplex.IntParam.IntSolLim, 1);
+
                 var solve = model.Solve();
 
                 sw.Stop();
 
                 Console.SetOut(fileOutputStream);
 
-                Console.WriteLine("Solving time: " + sw.Elapsed.TotalSeconds + ".");
+                Console.WriteLine("Solving time: " + sw.Elapsed.Duration().ToString() + ".");
 
                 //Solver the problem
                 if (solve)
@@ -495,7 +499,8 @@ namespace Horarios
                     Console.WriteLine();
                     Console.WriteLine("Solution found:");
                     Console.WriteLine(" Objective value = " + model.ObjValue);
-                    Console.WriteLine(" DxHxT = {0}", D * H * T);
+                    Console.WriteLine(" DxHxT = {0}\t(Todas as aulas)", D * H * T);
+                    Console.WriteLine(" TxH   = {0}\t(Aulas isoladas)", T * H);
                     Console.WriteLine();
 
                     Console.WriteLine();
