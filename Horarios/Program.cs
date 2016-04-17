@@ -30,6 +30,9 @@ namespace Horarios
 
                 encontrarSolucao(file);
             }
+
+            Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
+            Console.ReadKey(true);
         }
 
         private static void encontrarSolucao(string file)
@@ -407,10 +410,10 @@ namespace Horarios
 
             #region Pesos
             Dictionary<string, double> weights = new Dictionary<string, double>();
-            weights.Add("todasAulas", 1.0);
-            weights.Add("geminadas", 0.5);
-            weights.Add("isoladas", -1.0);
-            weights.Add("janelas", -0.1);
+            weights.Add("maxTodasAulas", 1.0);
+            weights.Add("maxGeminadas", 0.5);
+            weights.Add("minIsoladas", -1.0);
+            weights.Add("minJanelas", -0.01);
             #endregion
 
             //*******************************************************
@@ -431,7 +434,7 @@ namespace Horarios
                         {
 
                             // comeca gravacao aqui.
-                            foTodasAsAulas.AddTerm(weights["todasAulas"], x[d, h, t, p]);
+                            foTodasAsAulas.AddTerm(weights["maxTodasAulas"], x[d, h, t, p]);
 
                         }
                     }
@@ -464,7 +467,7 @@ namespace Horarios
 
                     //Multiplica por -1 para 'puxar' para baixo as aulas isoladas
                     //de forma que elas não apareçam, quando possível, na solução encontrada
-                    foMinAulasIsolada.AddTerm(weights["isoladas"], y[d, p]);
+                    foMinAulasIsolada.AddTerm(weights["minIsoladas"], y[d, p]);
 
                 }
             }
@@ -494,7 +497,7 @@ namespace Horarios
                             model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
                             model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
 
-                            foGeminada.AddTerm(weights["geminadas"], g[d, b, t, p]);
+                            foGeminada.AddTerm(weights["maxGeminadas"], g[d, b, t, p]);
 
                             b++;
                         }
@@ -515,7 +518,7 @@ namespace Horarios
             {
                 for (int d = 0; d < D; d++)
                 {
-                    foMinJanelas.AddTerm(weights["janelas"], j[p, d]);
+                    foMinJanelas.AddTerm(weights["minJanelas"], j[p, d]);
                 }
             }
             #endregion
@@ -541,7 +544,7 @@ namespace Horarios
             sw.Start();
 
             //Define um tempo máximo em segundos para o cplex
-            model.SetParam(Cplex.IntParam.TimeLimit, 20 * 60);
+            model.SetParam(Cplex.IntParam.TimeLimit, 30 * 60);
 
             //Pára o cplex ao encontrar a primeira solução 
             //model.SetParam(Cplex.IntParam.IntSolLim, 1);
@@ -552,9 +555,11 @@ namespace Horarios
             #endregion
 
             #region Escreve resultados à saida
-            var fileName = Path.GetFileNameWithoutExtension(file);
+
             var stdOutputStream = Console.Out;
-            var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.CreateNew, FileAccess.Write);
+
+            var fileName = Path.GetFileNameWithoutExtension(file);
+            var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
             var fileOutputStream = new StreamWriter(fileStream);
 
             //Write to the file instead of the standard output
@@ -606,8 +611,6 @@ namespace Horarios
 
             //Close console
             Console.SetOut(stdOutputStream);
-            Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
-            Console.ReadKey(true);
             #endregion
         }
 
