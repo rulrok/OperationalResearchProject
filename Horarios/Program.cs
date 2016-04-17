@@ -408,9 +408,9 @@ namespace Horarios
             #region Pesos
             Dictionary<string, double> weights = new Dictionary<string, double>();
             weights.Add("todasAulas", 1.0);
-            weights.Add("geminadas", .5);
-            weights.Add("isoladas", -1);
-            weights.Add("janelas", -1);
+            weights.Add("geminadas", 0.5);
+            weights.Add("isoladas", -1.0);
+            weights.Add("janelas", -0.1);
             #endregion
 
             //*******************************************************
@@ -509,13 +509,13 @@ namespace Horarios
             //  Função objetivo para tentar minimizar blocos separados
             //  de aulas
             //*********************************************************
-            #region FO Blocos de aulas
-            var foBlocosDeAulas = model.LinearNumExpr();
+            #region FO Janelas de aulas
+            var foMinJanelas = model.LinearNumExpr();
             for (int p = 0; p < P; p++)
             {
                 for (int d = 0; d < D; d++)
                 {
-                    foBlocosDeAulas.AddTerm(weights["janelas"], j[p, d]);
+                    foMinJanelas.AddTerm(weights["janelas"], j[p, d]);
                 }
             }
             #endregion
@@ -529,7 +529,7 @@ namespace Horarios
                     foMinAulasIsolada
                     , foGeminada
                     , foTodasAsAulas
-                    , foBlocosDeAulas
+                    , foMinJanelas
                     )
                 );
 
@@ -554,7 +554,7 @@ namespace Horarios
             #region Escreve resultados à saida
             var fileName = Path.GetFileNameWithoutExtension(file);
             var stdOutputStream = Console.Out;
-            var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.Truncate, FileAccess.Write);
+            var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.CreateNew, FileAccess.Write);
             var fileOutputStream = new StreamWriter(fileStream);
 
             //Write to the file instead of the standard output
@@ -571,7 +571,7 @@ namespace Horarios
                 Console.WriteLine("Solution found:");
                 Console.WriteLine(" Objective value = " + model.ObjValue);
                 Console.WriteLine(" DxHxT = {0}\t(Todas as aulas)", D * H * T);
-                Console.WriteLine(" TxH   = {0}\t(Aulas isoladas)", T * H);
+                Console.WriteLine(" TxH   = {0} \t(Aulas isoladas)", T * H);
                 Console.WriteLine();
 
                 Console.WriteLine();
