@@ -4,6 +4,7 @@ using System.Linq;
 using ILOG.Concert;
 using ILOG.CPLEX;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Horarios
 {
@@ -19,7 +20,7 @@ namespace Horarios
             //*******************************************************
 
             var files = Directory.GetFiles(@"./horarios/");
-            var stdout = Console.Out;
+
 
             foreach (var file in files)
             {
@@ -296,7 +297,7 @@ namespace Horarios
                             //Se existir uma restrição para esses dois professores
                             //
 
-                            
+
                             var turma = r[p1, p2];
 
                             for (int d = 0; d < D; d++)
@@ -309,7 +310,7 @@ namespace Horarios
                                 //Adiciona a restrição para os professores
                                 model.AddLe(exp, 1);
                             }
-                            
+
                         }
                     }
                 }
@@ -342,7 +343,7 @@ namespace Horarios
                         for (int t = 0; t < T; t++)
                         {
                             for (int p = 0; p < P; p++)
-                            {                            
+                            {
                                 g[d, b, t, p] = model.BoolVar();
                             }
                         }
@@ -353,11 +354,19 @@ namespace Horarios
                 #endregion
 
                 #region Funções objetivos
+
+                Dictionary<string, double> weights = new Dictionary<string, double>();
+                weights.Add("todasAulas", 1.0);
+                weights.Add("geminadas", 0.01);
+                weights.Add("isoladas", -1.0);
+
+
                 //*******************************************************
                 //  Função objetivo para garantir que todas as aulas
                 //  sejam dadas
                 //
                 //*******************************************************
+                #region FO Todas as aulas
                 var foTodasAsAulas = model.LinearNumExpr();
 
                 for (int d = 0; d < D; d++)
@@ -370,18 +379,20 @@ namespace Horarios
                             {
 
                                 // comeca gravacao aqui.
-                                foTodasAsAulas.AddTerm(10.0, x[d, h, t, p]);
+                                foTodasAsAulas.AddTerm(weights["todasAulas"], x[d, h, t, p]);
 
                             }
                         }
                     }
                 }
+                #endregion
 
                 //*******************************************************
                 //  Função objetivo para minimizar o número de aulas
                 //  isoladas
                 //
                 //*******************************************************
+                #region FO Aulas isoladas
                 var foMinAulasIsolada = model.LinearNumExpr();
                 for (int p = 0; p < P; p++)
                 {
@@ -401,15 +412,17 @@ namespace Horarios
 
                         //Multiplica por -1 para 'puxar' para baixo as aulas isoladas
                         //de forma que elas não apareçam, quando possível, na solução encontrada
-                        foMinAulasIsolada.AddTerm(-1, y[d, p]);
+                        foMinAulasIsolada.AddTerm(weights["isoladas"], y[d, p]);
 
                     }
                 }
+                #endregion
 
                 //*********************************************************
                 //  Função objetivo para tentar maximizar aulas geminadas
                 //
                 //*********************************************************
+                #region FO Geminada
                 var foGeminada = model.LinearNumExpr();
                 for (int d = 0; d < D; d++)
                 {
@@ -429,7 +442,7 @@ namespace Horarios
                                 model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
                                 model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
 
-                                foGeminada.AddTerm(0.1, g[d, b, t, p]);
+                                foGeminada.AddTerm(weights["geminadas"], g[d, b, t, p]);
 
                                 b++;
                             }
@@ -438,29 +451,38 @@ namespace Horarios
 
                     }
                 }
+                #endregion
 
                 //*******************************************************
                 //  Adiciona as funções objetivos ao modelo foTodasAsAulas
                 //
                 //*******************************************************
-                model.AddMaximize(model.Sum(foMinAulasIsolada, foGeminada, foTodasAsAulas));
+                model.AddMaximize(
+                    model.Sum(
+                        foMinAulasIsolada
+                        , foGeminada
+                        , foTodasAsAulas
+                        )
+                    );
 
                 #endregion
 
                 var fileName = Path.GetFileNameWithoutExtension(file);
+                var stdOutputStream = Console.Out;
                 var outputStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
-                var writer = new StreamWriter(outputStream);
+                var fileOutputStream = new StreamWriter(outputStream);
 
 
                 var sw = new Stopwatch();
 
                 sw.Start();
 
+                model.SetParam(Cplex.IntParam.TimeLimit, 60);
                 var solve = model.Solve();
 
                 sw.Stop();
 
-                Console.SetOut(writer);
+                Console.SetOut(fileOutputStream);
 
                 Console.WriteLine("Solving time: " + sw.Elapsed.TotalSeconds + ".");
 
@@ -476,18 +498,22 @@ namespace Horarios
                     Console.WriteLine();
 
                     Console.WriteLine();
+                    Console.SetOut(stdOutputStream);
                     Console.WriteLine("Mostrar agenda dos professores? [y/n]");
                     var key = Console.ReadKey(true);
                     if (key.Key.Equals(ConsoleKey.Y))
                     {
+                        Console.SetOut(fileOutputStream);
                         exibirTabelasProfessores(P, T, D, H, model, x, y);
                     }
 
                     Console.WriteLine();
+                    Console.SetOut(stdOutputStream);
                     Console.WriteLine("Mostrar agenda das turmas? [y/n]");
                     key = Console.ReadKey(true);
                     if (key.Key.Equals(ConsoleKey.Y))
                     {
+                        Console.SetOut(fileOutputStream);
                         exibirTabelasTurmas(P, T, D, H, model, x);
                     }
                 }
@@ -496,12 +522,13 @@ namespace Horarios
                     Console.WriteLine("Solution status: " + model.GetStatus());
                 }
 
-                //Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
+                Console.SetOut(stdOutputStream);
+                Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
                 Console.ReadKey();
                 Console.Out.Flush();
-                writer.Dispose();
+                fileOutputStream.Dispose();
                 outputStream.Dispose();
-                Console.SetOut(stdout);
+                Console.SetOut(stdOutputStream);
             }
         }
 
