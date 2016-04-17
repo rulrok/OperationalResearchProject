@@ -353,6 +353,24 @@ namespace Horarios
 
                 #endregion
 
+                #region Janelas
+                var j = new INumVar[D, B, T, P];
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int t = 0; t < T; t++)
+                    {
+                        for (int p = 0; p < P; p++)
+                        {
+                            for (int h = 0; h < H; h++)
+                            {
+                                j[d, t, p, h] = model.BoolVar();
+                            }
+                        }
+                    }
+                }
+                #endregion
+
                 #region Funções objetivos
 
                 Dictionary<string, double> weights = new Dictionary<string, double>();
@@ -478,7 +496,7 @@ namespace Horarios
                 sw.Start();
 
                 //Define um tempo máximo em segundos para o cplex
-                model.SetParam(Cplex.IntParam.TimeLimit,  20 * 60);
+                model.SetParam(Cplex.IntParam.TimeLimit, 20 * 60);
 
                 //Pára o cplex ao encontrar a primeira solução 
                 //model.SetParam(Cplex.IntParam.IntSolLim, 1);
