@@ -20,10 +20,9 @@ namespace Horarios
 
             var files = Directory.GetFiles(@"./horarios/");
 
-
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) != "nilda36")
+                if (Path.GetFileNameWithoutExtension(file) != "nilda30")
                 {
                     continue;
                 }
@@ -411,9 +410,9 @@ namespace Horarios
             #region Pesos
             Dictionary<string, double> weights = new Dictionary<string, double>();
             weights.Add("maxTodasAulas", 1.0);
-            weights.Add("maxGeminadas", 0.5);
-            weights.Add("minIsoladas", -1.0);
-            weights.Add("minJanelas", -0.01);
+            weights.Add("maxGeminadas", 10);
+            weights.Add("minIsoladas", -5);
+            weights.Add("minJanelas", -20);
             #endregion
 
             //*******************************************************
@@ -542,6 +541,7 @@ namespace Horarios
             var sw = new Stopwatch();
 
             sw.Start();
+            Console.Beep(440, 500);
 
             //Define um tempo máximo em segundos para o cplex
             model.SetParam(Cplex.IntParam.TimeLimit, 30 * 60);
@@ -551,6 +551,8 @@ namespace Horarios
 
             var solve = model.Solve();
 
+            Console.Beep(880, 1 * 250);
+            Console.Beep(880, 1 * 250);
             sw.Stop();
             #endregion
 
@@ -579,25 +581,25 @@ namespace Horarios
                 Console.WriteLine(" TxH   = {0} \t(Aulas isoladas)", T * H);
                 Console.WriteLine();
 
-                Console.WriteLine();
-                Console.SetOut(stdOutputStream);
-                Console.WriteLine("Mostrar agenda dos professores? [y/n]");
-                var key = Console.ReadKey(true);
-                if (key.Key.Equals(ConsoleKey.Y))
-                {
-                    Console.SetOut(fileOutputStream);
+                //Console.WriteLine();
+                //Console.SetOut(stdOutputStream);
+                //Console.WriteLine("Mostrar agenda dos professores? [y/n]");
+                //var key = Console.ReadKey(true);
+                //if (key.Key.Equals(ConsoleKey.Y))
+                //{
+                    //Console.SetOut(fileOutputStream);
                     exibirTabelasProfessores(P, T, D, H, model, x, y);
-                }
+                //}
 
-                Console.WriteLine();
-                Console.SetOut(stdOutputStream);
-                Console.WriteLine("Mostrar agenda das turmas? [y/n]");
-                key = Console.ReadKey(true);
-                if (key.Key.Equals(ConsoleKey.Y))
-                {
-                    Console.SetOut(fileOutputStream);
+                //Console.WriteLine();
+                //Console.SetOut(stdOutputStream);
+                //Console.WriteLine("Mostrar agenda das turmas? [y/n]");
+                //key = Console.ReadKey(true);
+                //if (key.Key.Equals(ConsoleKey.Y))
+                //{
+                //    Console.SetOut(fileOutputStream);
                     exibirTabelasTurmas(P, T, D, H, model, x);
-                }
+                //}
             }
             else {
                 Console.WriteLine("No solution found.");
