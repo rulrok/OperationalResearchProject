@@ -386,7 +386,8 @@ namespace Horarios
                             turmaBlocoExp = model.LinearNumExpr();
                         }
 
-                        model.IfThen(model.Ge(blocosExp, 1), model.Eq(j[p, d], 1));
+                        model.Add(model.IfThen(model.Ge(blocosExp, 1), model.Eq(j[p, d], 1)));
+
                     }
                 }
                 #endregion
@@ -397,6 +398,7 @@ namespace Horarios
                 weights.Add("todasAulas", 1.0);
                 weights.Add("geminadas", .5);
                 weights.Add("isoladas", -1);
+                weights.Add("janelas", -1);
 
 
                 //*******************************************************
@@ -491,6 +493,21 @@ namespace Horarios
                 }
                 #endregion
 
+                //*********************************************************
+                //  Função objetivo para tentar minimizar blocos separados
+                //  de aulas
+                //*********************************************************
+                #region FO Blocos de aulas
+                var foBlocosDeAulas = model.LinearNumExpr();
+                for (int p = 0; p < P; p++)
+                {
+                    for (int d = 0; d < D; d++)
+                    {
+                        foBlocosDeAulas.AddTerm(weights["janelas"], j[p, d]);
+                    }
+                }
+                #endregion
+
                 //*******************************************************
                 //  Adiciona as funções objetivos ao modelo foTodasAsAulas
                 //
@@ -500,6 +517,7 @@ namespace Horarios
                         foMinAulasIsolada
                         , foGeminada
                         , foTodasAsAulas
+                        , foBlocosDeAulas
                         )
                     );
 
