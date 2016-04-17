@@ -40,10 +40,14 @@ namespace Horarios
 
                 Cplex model = new Cplex();
 
+                #region Variáveis de decisão
                 //*******************************************************
-                //  Define a variável de decisão
+                //  Define a variável de decisão que define que todas
+                //  as aulas devem ser dadas
                 //
                 //*******************************************************
+
+                #region Variável X - Todas as aulas são dadas
                 var x = new INumVar[D, H, T, P];
 
                 for (int d = 0; d < D; d++)
@@ -62,6 +66,86 @@ namespace Horarios
                         }
                     }
                 }
+                #endregion
+
+                #region Variável Y - Aulas isoladas
+                // y[d,p] = num aulas prof P dia D.
+                var y = new INumVar[D, P];
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        y[d, p] = model.BoolVar();
+                    }
+                }
+                #endregion
+
+                #region Variável W
+                // w[d, p, t] = num aulas prof P dia D.
+                var w = new INumVar[D, P, T];
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int p = 0; p < P; p++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            w[d, p, t] = model.BoolVar();
+                        }
+                    }
+                }
+                #endregion
+
+                #region Variável G
+                // O professor nao da aulas esparsas.
+                //
+                // i   D      D
+                // 0:  1      1
+                // 1:  -  =>  1
+                // 2:  1      -
+                //    ...    ...
+                //
+                // Testar do par para o impar (0 -> 1, 2 -> 3, etc).
+                // Nao testar 1 -> 2, 3 -> 4 etc.
+
+                // H = 5 -> B = 3
+                // H = 4 -> B = 2
+                int B = (int)Math.Ceiling(H / 2.0);
+
+                var g = new INumVar[D, B, T, P];
+
+                for (int d = 0; d < D; d++)
+                {
+                    for (int b = 0; b < B; b++)
+                    {
+                        for (int t = 0; t < T; t++)
+                        {
+                            for (int p = 0; p < P; p++)
+                            {
+                                g[d, b, t, p] = model.BoolVar();
+                            }
+                        }
+                    }
+                }
+                #endregion
+
+                #region Variável J
+                var j = new INumVar[P, D];
+
+                for (int p = 0; p < P; p++)
+                {
+                    for (int d = 0; d < D; d++)
+                    {
+
+                        j[p, d] = model.BoolVar();
+
+                    }
+
+                }
+                #endregion
+
+                #endregion
 
                 // Primeiro tratar germinacao;
                 // Segundo tratar aulas isoladas;
@@ -72,7 +156,7 @@ namespace Horarios
                 //
                 //*******************************************************
 
-                #region Restrições 1 e 2
+                #region Restrições 1 e 2 - Professor só da uma aula por vez; e Professor só da aula quando disponível
                 // Restrições 1 e 2:
                 //
                 // Restrição 1:
@@ -119,7 +203,7 @@ namespace Horarios
                 }
                 #endregion
 
-                #region Restrição 3
+                #region Restrição 3 - Quantidade de aulas que um professor dá por turma
                 // Restrição 3: 
                 // A quantidade de aulas de cada professor por turma.
                 // e.g., Humberto, 7 periodo, 4 aulas de PO.
@@ -150,7 +234,7 @@ namespace Horarios
                 }
                 #endregion
 
-                #region Restrição 4
+                #region Restrição 4 - Quantidade máxima de aulas por dia para um professor
                 // Restrição 4:
                 // O professor leciona no máximo duas vezes em cada turma para cada dia
                 // (volta gravacao aqui)
@@ -184,7 +268,7 @@ namespace Horarios
                 }
                 #endregion
 
-                #region Restrição 5
+                #region Restrição 5 - Dois professores não lecionam no mesmo dia e horário e turma
                 // Restrição 5:
                 // Uma turma não pode ter mais de um professor no mesmo dia e horário
                 // Adiciona DxHxT restrições ao modelo
@@ -211,20 +295,7 @@ namespace Horarios
                 }
                 #endregion
 
-                #region Restrição 6
-
-                // y[d,p] = num aulas prof P dia D.
-                var y = new INumVar[D, P];
-
-                for (int d = 0; d < D; d++)
-                {
-                    for (int p = 0; p < P; p++)
-                    {
-                        y[d, p] = model.BoolVar();
-                    }
-                }
-
-
+                #region Restrição 6 - Aulas isoladas
                 for (int d = 0; d < D; d++)
                 {
                     for (int p = 0; p < P; p++)
@@ -247,23 +318,7 @@ namespace Horarios
                 }
                 #endregion
 
-                #region Restrição 7
-
-                // w[d, p, t] = num aulas prof P dia D.
-                var w = new INumVar[D, P, T];
-
-                for (int d = 0; d < D; d++)
-                {
-                    for (int p = 0; p < P; p++)
-                    {
-                        for (int t = 0; t < T; t++)
-                        {
-                            w[d, p, t] = model.BoolVar();
-                        }
-                    }
-                }
-
-
+                #region Restrição 7 - Dois professores não lecionam no mesmo dia
                 for (int d = 0; d < D; d++)
                 {
                     for (int p = 0; p < P; p++)
@@ -317,56 +372,7 @@ namespace Horarios
 
                 #endregion
 
-                #region Geminada
-
-                // O professor nao da aulas esparsas.
-                //
-                // i   D      D
-                // 0:  1      1
-                // 1:  -  =>  1
-                // 2:  1      -
-                //    ...    ...
-                //
-                // Testar do par para o impar (0 -> 1, 2 -> 3, etc).
-                // Nao testar 1 -> 2, 3 -> 4 etc.
-
-                // H = 5 -> B = 3
-                // H = 4 -> B = 2
-                int B = (int)Math.Ceiling(H / 2.0);
-
-                var g = new INumVar[D, B, T, P];
-
-                for (int d = 0; d < D; d++)
-                {
-                    for (int b = 0; b < B; b++)
-                    {
-                        for (int t = 0; t < T; t++)
-                        {
-                            for (int p = 0; p < P; p++)
-                            {
-                                g[d, b, t, p] = model.BoolVar();
-                            }
-                        }
-                    }
-                }
-
-
-                #endregion
-
-                #region Janelas
-                var j = new INumVar[P, D];
-
-                for (int p = 0; p < P; p++)
-                {
-                    for (int d = 0; d < D; d++)
-                    {
-
-                        j[p, d] = model.BoolVar();
-
-                    }
-
-                }
-
+                #region Janelas - Diminue blocos de aulas separados para professores
                 for (int p = 0; p < P; p++)
                 {
                     for (int d = 0; d < D; d++)
@@ -394,12 +400,13 @@ namespace Horarios
 
                 #region Funções objetivos
 
+                #region Pesos
                 Dictionary<string, double> weights = new Dictionary<string, double>();
                 weights.Add("todasAulas", 1.0);
                 weights.Add("geminadas", .5);
                 weights.Add("isoladas", -1);
                 weights.Add("janelas", -1);
-
+                #endregion
 
                 //*******************************************************
                 //  Função objetivo para garantir que todas as aulas
@@ -523,12 +530,7 @@ namespace Horarios
 
                 #endregion
 
-                var fileName = Path.GetFileNameWithoutExtension(file);
-                var stdOutputStream = Console.Out;
-                var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.Truncate, FileAccess.Write);
-                var fileOutputStream = new StreamWriter(fileStream);
-
-
+                #region Tenta resolver o problema
                 var sw = new Stopwatch();
 
                 sw.Start();
@@ -542,7 +544,15 @@ namespace Horarios
                 var solve = model.Solve();
 
                 sw.Stop();
+                #endregion
 
+                #region Escreve resultados à saida
+                var fileName = Path.GetFileNameWithoutExtension(file);
+                var stdOutputStream = Console.Out;
+                var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.Truncate, FileAccess.Write);
+                var fileOutputStream = new StreamWriter(fileStream);
+
+                //Write to the file instead of the standard output
                 Console.SetOut(fileOutputStream);
 
                 Console.WriteLine("Solving time: " + sw.Elapsed.Duration().ToString() + ".");
@@ -593,6 +603,7 @@ namespace Horarios
                 Console.SetOut(stdOutputStream);
                 Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
                 Console.ReadKey(true);
+                #endregion
             }
         }
 
@@ -713,9 +724,9 @@ namespace Horarios
         #region Leitura de arquivo
         private static void lerArquivo(out int[,] a, out int[,,] i, out int[,] l, out int[,] r, out int P, out int T, out int D, out int H, string fileName)
         {
-            var lines = System.IO.File.ReadAllLines(fileName);
+            var lines = File.ReadAllLines(fileName);
 
-            lines = lines.Where(s => !String.IsNullOrWhiteSpace(s)).ToArray();
+            lines = lines.Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
             P = int.Parse(lines[0].Split('\t').First());
             T = int.Parse(lines[1].Split('\t').First());
