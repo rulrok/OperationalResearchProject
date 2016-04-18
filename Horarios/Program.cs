@@ -517,21 +517,19 @@ namespace Horarios
                 {
                     for (int p = 0; p < P; p++)
                     {
-                        var b = 0;
-
-                        for (int h = 0; h < H / 2; h += 2)
+                        
+                        for (int h = 0, bloco = 0; h < H / 2; h += 2, bloco++)
                         {
                             var exp = model.LinearNumExpr();
 
                             exp.AddTerm(1.0, x[d, h, t, p]);
                             exp.AddTerm(1.0, x[d, h + 1, t, p]);
 
-                            model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, b, t, p], 1)));
-                            model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, b, t, p], 0)));
+                            model.Add(model.IfThen(model.Eq(exp, 2), model.Eq(g[d, bloco, t, p], 1)));
+                            model.Add(model.IfThen(model.Le(exp, 1), model.Eq(g[d, bloco, t, p], 0)));
 
-                            foGeminada.AddTerm(weights["maxGeminadas"], g[d, b, t, p]);
+                            foGeminada.AddTerm(weights["maxGeminadas"], g[d, bloco, t, p]);
 
-                            b++;
                         }
 
                     }
