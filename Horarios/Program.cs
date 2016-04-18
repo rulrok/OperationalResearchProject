@@ -594,6 +594,7 @@ namespace Horarios
             var stdOutputStream = Console.Out;
 
             var fileName = Path.GetFileNameWithoutExtension(file);
+            Directory.CreateDirectory("./saidas");
             var fileStream = new FileStream("./saidas/" + fileName + "_saida.txt", FileMode.OpenOrCreate, FileAccess.Write);
             var fileOutputStream = new StreamWriter(fileStream);
 
