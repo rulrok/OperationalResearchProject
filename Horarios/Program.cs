@@ -22,10 +22,10 @@ namespace Horarios
 
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) != "nilda30")
-                {
-                    continue;
-                }
+                //if (Path.GetFileNameWithoutExtension(file) != "nilda30")
+                //{
+                //    continue;
+                //}
 
                 encontrarSolucao(file);
             }
@@ -400,36 +400,38 @@ namespace Horarios
                     }
 
                     //Se tiver qualquer bloco
-                    model.IfThen(
-                        model.Not(
-                            model.Or(
-                                new[]
-                                {
-                                    //5
-                                    model.Eq(11111.0, blocos),
-                                    //4
-                                    model.Eq(01111.0, blocos),
-                                    model.Eq(11110.0, blocos),
-                                    //3
-                                    model.Eq(00111.0, blocos),
-                                    model.Eq(01110.0, blocos),
-                                    model.Eq(11100.0, blocos),
-                                    //2
-                                    model.Eq(00011.0, blocos),
-                                    model.Eq(00110.0, blocos),
-                                    model.Eq(01100.0, blocos),
-                                    model.Eq(11000.0, blocos),
-                                    //1
-                                    model.Eq(00001.0, blocos),
-                                    model.Eq(00010.0, blocos),
-                                    model.Eq(00100.0, blocos),
-                                    model.Eq(01000.0, blocos),
-                                    model.Eq(10000.0, blocos)
-                                }
-                              )
-                              , "blocos"
+                    model.Add(
+                        model.IfThen(
+                            model.Not(
+                                model.Or(
+                                    new[]
+                                    {
+                                        //5
+                                        model.Eq(11111.0, blocos),
+                                        //4
+                                        model.Eq(01111.0, blocos),
+                                        model.Eq(11110.0, blocos),
+                                        //3
+                                        model.Eq(00111.0, blocos),
+                                        model.Eq(01110.0, blocos),
+                                        model.Eq(11100.0, blocos),
+                                        //2
+                                        model.Eq(00011.0, blocos),
+                                        model.Eq(00110.0, blocos),
+                                        model.Eq(01100.0, blocos),
+                                        model.Eq(11000.0, blocos),
+                                        //1
+                                        model.Eq(00001.0, blocos),
+                                        model.Eq(00010.0, blocos),
+                                        model.Eq(00100.0, blocos),
+                                        model.Eq(01000.0, blocos),
+                                        model.Eq(10000.0, blocos)
+                                    }
+                                  )
+                                  , "blocos"
+                                )
+                            , model.Eq(j[p, d], 1)
                             )
-                        , model.Eq(j[d, p], 1)
                         );
                     //model.Add(model.IfThen(model.Ge(turmaBlocoExp, 1), model.Eq(j[p, d], 1)));
                 }
@@ -443,7 +445,7 @@ namespace Horarios
             weights.Add("maxTodasAulas", 1.0);
             weights.Add("maxGeminadas", 0.5);
             weights.Add("minIsoladas", -0.01);
-            weights.Add("minJanelas", -1);
+            weights.Add("minJanelas", -0.1);
             #endregion
 
             //*******************************************************
