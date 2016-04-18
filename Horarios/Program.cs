@@ -380,27 +380,58 @@ namespace Horarios
             #endregion
 
             #region Janelas - Diminue blocos de aulas separados para professores
+            //Fixa P e D
             for (int p = 0; p < P; p++)
             {
                 for (int d = 0; d < D; d++)
                 {
-                    var blocosExp = model.LinearNumExpr();
-                    var turmaBlocoExp = model.LinearNumExpr();
+                    //Varia T e H
+                    var blocos = model.LinearNumExpr();
                     for (int t = 0; t < T; t++)
                     {
-
+                        var turmaBlocoExp = model.LinearNumExpr();
                         for (int h = 0; h < H; h++)
                         {
-                            turmaBlocoExp.AddTerm(1, x[d, h, t, p]);
-                            var asdf = a[t, p];
+
+                            turmaBlocoExp.AddTerm(Math.Pow(10, h), x[d, h, t, p]);
                         }
 
-                        blocosExp.Add(turmaBlocoExp);
-                        turmaBlocoExp = model.LinearNumExpr();
+                        blocos.Add(turmaBlocoExp);
                     }
 
-                    model.Add(model.IfThen(model.Ge(blocosExp, 1), model.Eq(j[p, d], 1)));
-
+                    //Se tiver qualquer bloco
+                    model.IfThen(
+                        model.Not(
+                            model.Or(
+                                new[]
+                                {
+                                    //5
+                                    model.Eq(11111.0, blocos),
+                                    //4
+                                    model.Eq(01111.0, blocos),
+                                    model.Eq(11110.0, blocos),
+                                    //3
+                                    model.Eq(00111.0, blocos),
+                                    model.Eq(01110.0, blocos),
+                                    model.Eq(11100.0, blocos),
+                                    //2
+                                    model.Eq(00011.0, blocos),
+                                    model.Eq(00110.0, blocos),
+                                    model.Eq(01100.0, blocos),
+                                    model.Eq(11000.0, blocos),
+                                    //1
+                                    model.Eq(00001.0, blocos),
+                                    model.Eq(00010.0, blocos),
+                                    model.Eq(00100.0, blocos),
+                                    model.Eq(01000.0, blocos),
+                                    model.Eq(10000.0, blocos)
+                                }
+                              )
+                              , "blocos"
+                            )
+                        , model.Eq(j[d, p], 1)
+                        );
+                    //model.Add(model.IfThen(model.Ge(turmaBlocoExp, 1), model.Eq(j[p, d], 1)));
                 }
             }
             #endregion
@@ -410,9 +441,9 @@ namespace Horarios
             #region Pesos
             Dictionary<string, double> weights = new Dictionary<string, double>();
             weights.Add("maxTodasAulas", 1.0);
-            weights.Add("maxGeminadas", 10);
-            weights.Add("minIsoladas", -5);
-            weights.Add("minJanelas", -20);
+            weights.Add("maxGeminadas", 0.5);
+            weights.Add("minIsoladas", -0.01);
+            weights.Add("minJanelas", -1);
             #endregion
 
             //*******************************************************
@@ -587,8 +618,8 @@ namespace Horarios
                 //var key = Console.ReadKey(true);
                 //if (key.Key.Equals(ConsoleKey.Y))
                 //{
-                    //Console.SetOut(fileOutputStream);
-                    exibirTabelasProfessores(P, T, D, H, model, x, y);
+                //Console.SetOut(fileOutputStream);
+                exibirTabelasProfessores(P, T, D, H, model, x, y);
                 //}
 
                 //Console.WriteLine();
@@ -598,7 +629,7 @@ namespace Horarios
                 //if (key.Key.Equals(ConsoleKey.Y))
                 //{
                 //    Console.SetOut(fileOutputStream);
-                    exibirTabelasTurmas(P, T, D, H, model, x);
+                exibirTabelasTurmas(P, T, D, H, model, x);
                 //}
             }
             else {
