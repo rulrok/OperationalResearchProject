@@ -438,6 +438,89 @@ namespace Horarios
             }
             #endregion
 
+
+            #region Janelas do Humberto
+
+            /*
+
+               dp e { 1 ... H }
+               P` = primeiro horario que da aula
+               U  = ultimo horario que da aula
+               Q  = qnts aulas no dia
+               
+               
+               U - P - Q + 1 = num janelas
+               
+               Quando somatorio = 0, usar valores artificiais para P` e para U.
+               
+            */
+
+
+            var jh = new IIntVar[P, D];
+
+            for (int p = 0; p < P; p++)
+            {
+                for (int d = 0; d < D; d++)
+                {
+                    
+                    jh[p, d] = model.IntVar(0, 10);
+                }
+
+            }
+
+
+
+            for (int d = 0; d < D; d++)
+            {
+                for (int p = 0; p < P; p++)
+                {
+                    var pExp = model.LinearNumExpr();
+                    var uExp = model.LinearNumExpr();
+                    var qExp = model.LinearNumExpr();
+                    var horarioAula = model.LinearNumExpr();
+
+                    for (int t = 0; t < T; t++)
+                    {
+                        for (int h = 0; h < H; h++)
+                        {
+                            // 1*{} - ...
+                            qExp.AddTerm(h+1, x[d,h,t,p]);
+
+
+                            horarioAula.AddTerm(Math.Pow(10, h), x[d, h, t, p]);
+
+                        }
+
+
+                        model.Add(model.IfThen(model.Eq(10001, horarioAula), model.And(model.Eq(pExp, 1), model.Eq(uExp, 5))));
+
+
+                        model.Add(model.IfThen(model.Eq(10010, horarioAula), model.And(model.Eq(pExp, 1), model.Eq(uExp, 4))));
+
+
+                        model.Add(model.IfThen(model.Eq(10001, horarioAula), model.Eq(jh[d, p], 3)));
+                        model.Add(model.IfThen(model.Eq(10010, horarioAula), model.Eq(jh[d, p], 2)));
+                        model.Add(model.IfThen(model.Eq(10100, horarioAula), model.Eq(jh[d, p], 1)));
+                        model.Add(model.IfThen(model.Eq(11000, horarioAula), model.Eq(jh[d, p], 0)));
+                        model.Add(model.IfThen(model.Eq(01001, horarioAula), model.Eq(jh[d, p], 2)));
+                        model.Add(model.IfThen(model.Eq(01010, horarioAula), model.Eq(jh[d, p], 1)));
+                        model.Add(model.IfThen(model.Eq(01100, horarioAula), model.Eq(jh[d, p], 0)));
+                        model.Add(model.IfThen(model.Eq(00101, horarioAula), model.Eq(jh[d, p], 1)));
+                        model.Add(model.IfThen(model.Eq(00110, horarioAula), model.Eq(jh[d, p], 0)));
+                        model.Add(model.IfThen(model.Eq(00011, horarioAula), model.Eq(jh[d, p], 0)));
+
+
+
+                        // j = U - P - Q + 1
+
+                    }
+                }
+            }
+
+
+
+            #endregion
+
             #region Funções objetivos
 
             #region Pesos
@@ -849,3 +932,17 @@ namespace Horarios
     }
 
 }
+
+/*
+
+    dp e { 1 ... H }
+    P` = primeiro horario que da aula
+    U  = ultimo horario que da aula
+    Q  = qnts aulas no dia
+
+
+    U - P - Q + 1 = num janelas
+
+    Quando somatorio = 0, usar valores artificiais para P` e para U.
+
+*/
