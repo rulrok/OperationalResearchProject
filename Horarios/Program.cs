@@ -456,7 +456,7 @@ namespace Horarios
             */
 
 
-            var jh = new IIntVar[P, D];
+            var jh = new INumVar[P, D];
             var isThereAlreadyAfirst = new IIntVar[P, D, T, H];
             var isThereAlreadyAlast = new IIntVar[P, D, T, H];
 
@@ -465,7 +465,7 @@ namespace Horarios
                 for (int d = 0; d < D; d++)
                 {
 
-                    jh[p, d] = model.IntVar(0, 10);
+                    jh[p, d] = model.NumVar(0.0, 10.0);
                     for (int t = 0; t < T; t++)
                     {
                         for (int h = 0; h < H; h++)
@@ -523,12 +523,15 @@ namespace Horarios
                         }
                     }
                     // j = U - P - Q + 1
-                    // j = U - (P + Q) + 1
                     model.Add(
-                        model.Eq(
-                            j[p, d], model.Sum(uExp, model.Prod(-1, pExp), model.Prod(-1, qExp), model.Constant(1))
-                            )
-                        );
+                        model.IfThen(
+                          model.Ge(qExp, 0)
+                        , model.Eq(
+                                jh[p, d], model.Sum(uExp, model.Prod(-1, pExp), model.Prod(-1, qExp), model.Constant(1))
+                                )
+                        )
+                    );
+
                 }
             }
 
@@ -541,10 +544,10 @@ namespace Horarios
             #region Pesos
             Dictionary<string, double> weights = new Dictionary<string, double>();
             weights.Add("maxTodasAulas", 1.0);
-            weights.Add("maxGeminadas", 0.5);
-            weights.Add("minIsoladas", -0.01);
+            weights.Add("maxGeminadas", 0);
+            weights.Add("minIsoladas", 1);
             //weights.Add("minJanelas", -0.1);
-            weights.Add("minJanelasHumberto", -1);
+            weights.Add("minJanelasHumberto", -10);
             #endregion
 
             //*******************************************************
