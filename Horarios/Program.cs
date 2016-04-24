@@ -381,61 +381,61 @@ namespace Horarios
 
             #region Janelas - Diminue blocos de aulas separados para professores
             //Fixa P e D
-            for (int p = 0; p < P; p++)
-            {
-                for (int d = 0; d < D; d++)
-                {
-                    //Varia T e H
-                    var blocos = model.LinearNumExpr();
-                    for (int t = 0; t < T; t++)
-                    {
-                        var turmaBlocoExp = model.LinearNumExpr();
-                        for (int h = 0; h < H; h++)
-                        {
+            //for (int p = 0; p < P; p++)
+            //{
+            //    for (int d = 0; d < D; d++)
+            //    {
+            //        //Varia T e H
+            //        var blocos = model.LinearNumExpr();
+            //        for (int t = 0; t < T; t++)
+            //        {
+            //            var turmaBlocoExp = model.LinearNumExpr();
+            //            for (int h = 0; h < H; h++)
+            //            {
 
-                            turmaBlocoExp.AddTerm(Math.Pow(10, h), x[d, h, t, p]);
-                        }
+            //                turmaBlocoExp.AddTerm(Math.Pow(10, h), x[d, h, t, p]);
+            //            }
 
-                        blocos.Add(turmaBlocoExp);
-                    }
+            //            blocos.Add(turmaBlocoExp);
+            //        }
 
-                    //Se tiver qualquer bloco
-                    model.Add(
-                        model.IfThen(
-                            model.Not(
-                                model.Or(
-                                    new[]
-                                    {
-                                        //5
-                                        model.Eq(11111.0, blocos),
-                                        //4
-                                        model.Eq(01111.0, blocos),
-                                        model.Eq(11110.0, blocos),
-                                        //3
-                                        model.Eq(00111.0, blocos),
-                                        model.Eq(01110.0, blocos),
-                                        model.Eq(11100.0, blocos),
-                                        //2
-                                        model.Eq(00011.0, blocos),
-                                        model.Eq(00110.0, blocos),
-                                        model.Eq(01100.0, blocos),
-                                        model.Eq(11000.0, blocos),
-                                        //1
-                                        model.Eq(00001.0, blocos),
-                                        model.Eq(00010.0, blocos),
-                                        model.Eq(00100.0, blocos),
-                                        model.Eq(01000.0, blocos),
-                                        model.Eq(10000.0, blocos)
-                                    }
-                                  )
-                                  , "blocos"
-                                )
-                            , model.Eq(j[p, d], 1)
-                            )
-                        );
-                    //model.Add(model.IfThen(model.Ge(turmaBlocoExp, 1), model.Eq(j[p, d], 1)));
-                }
-            }
+            //        //Se tiver qualquer bloco
+            //        model.Add(
+            //            model.IfThen(
+            //                model.Not(
+            //                    model.Or(
+            //                        new[]
+            //                        {
+            //                            //5
+            //                            model.Eq(11111.0, blocos),
+            //                            //4
+            //                            model.Eq(01111.0, blocos),
+            //                            model.Eq(11110.0, blocos),
+            //                            //3
+            //                            model.Eq(00111.0, blocos),
+            //                            model.Eq(01110.0, blocos),
+            //                            model.Eq(11100.0, blocos),
+            //                            //2
+            //                            model.Eq(00011.0, blocos),
+            //                            model.Eq(00110.0, blocos),
+            //                            model.Eq(01100.0, blocos),
+            //                            model.Eq(11000.0, blocos),
+            //                            //1
+            //                            model.Eq(00001.0, blocos),
+            //                            model.Eq(00010.0, blocos),
+            //                            model.Eq(00100.0, blocos),
+            //                            model.Eq(01000.0, blocos),
+            //                            model.Eq(10000.0, blocos)
+            //                        }
+            //                      )
+            //                      , "blocos"
+            //                    )
+            //                , model.Eq(j[p, d], 1)
+            //                )
+            //            );
+            //        //model.Add(model.IfThen(model.Ge(turmaBlocoExp, 1), model.Eq(j[p, d], 1)));
+            //    }
+            //}
             #endregion
 
 
@@ -457,13 +457,23 @@ namespace Horarios
 
 
             var jh = new IIntVar[P, D];
+            var isThereAlreadyAfirst = new IIntVar[P, D, T, H];
+            var isThereAlreadyAlast = new IIntVar[P, D, T, H];
 
             for (int p = 0; p < P; p++)
             {
                 for (int d = 0; d < D; d++)
                 {
-                    
+
                     jh[p, d] = model.IntVar(0, 10);
+                    for (int t = 0; t < T; t++)
+                    {
+                        for (int h = 0; h < H; h++)
+                        {
+                            isThereAlreadyAfirst[p, d, t, h] = model.BoolVar();
+                            isThereAlreadyAlast[p, d, t, h] = model.BoolVar();
+                        }
+                    }
                 }
 
             }
@@ -477,43 +487,48 @@ namespace Horarios
                     var pExp = model.LinearNumExpr();
                     var uExp = model.LinearNumExpr();
                     var qExp = model.LinearNumExpr();
-                    var horarioAula = model.LinearNumExpr();
+
 
                     for (int t = 0; t < T; t++)
                     {
                         for (int h = 0; h < H; h++)
                         {
                             // 1*{} - ...
-                            qExp.AddTerm(h+1, x[d,h,t,p]);
+                            qExp.AddTerm(h + 1, x[d, h, t, p]);
 
+                            var orPExp = model.LinearNumExpr(0);
+                            var orUExp = model.LinearNumExpr(0);
+                            //Verifica se já apareceu alguém antes
+                            for (var previous = 0; previous < h; previous++)
+                            {
+                                orPExp.AddTerm(1, x[d, previous, t, p]);
+                            }
 
-                            horarioAula.AddTerm(Math.Pow(10, h), x[d, h, t, p]);
+                            for (int next = H; next < h; next--)
+                            {
+                                orUExp.AddTerm(1, x[d, next, t, p]);
+                            }
+
+                            model.Add(model.IfThen(model.And(model.Ge(orPExp, 0), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAfirst[p, d, t, h], 1)));
+                            model.Add(model.IfThen(model.And(model.Ge(orUExp, 0), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAlast[p, d, t, h], 1)));
+                            var coef = h + 1;
+                            pExp.AddTerm(coef, x[d, h, t, p]);
+                            pExp.AddTerm(-coef, isThereAlreadyAfirst[p, d, t, h]);
+                            //1 2 3 4 5 (h + 1)
+                            //1 0 1 0 0 (x[p,d,t,h])
+                            //p= ?
+                            qExp.AddTerm(coef, x[d, h, t, p]);
+                            pExp.AddTerm(-coef, isThereAlreadyAlast[p, d, t, h]);
 
                         }
-
-
-                        model.Add(model.IfThen(model.Eq(10001, horarioAula), model.And(model.Eq(pExp, 1), model.Eq(uExp, 5))));
-
-
-                        model.Add(model.IfThen(model.Eq(10010, horarioAula), model.And(model.Eq(pExp, 1), model.Eq(uExp, 4))));
-
-
-                        model.Add(model.IfThen(model.Eq(10001, horarioAula), model.Eq(jh[d, p], 3)));
-                        model.Add(model.IfThen(model.Eq(10010, horarioAula), model.Eq(jh[d, p], 2)));
-                        model.Add(model.IfThen(model.Eq(10100, horarioAula), model.Eq(jh[d, p], 1)));
-                        model.Add(model.IfThen(model.Eq(11000, horarioAula), model.Eq(jh[d, p], 0)));
-                        model.Add(model.IfThen(model.Eq(01001, horarioAula), model.Eq(jh[d, p], 2)));
-                        model.Add(model.IfThen(model.Eq(01010, horarioAula), model.Eq(jh[d, p], 1)));
-                        model.Add(model.IfThen(model.Eq(01100, horarioAula), model.Eq(jh[d, p], 0)));
-                        model.Add(model.IfThen(model.Eq(00101, horarioAula), model.Eq(jh[d, p], 1)));
-                        model.Add(model.IfThen(model.Eq(00110, horarioAula), model.Eq(jh[d, p], 0)));
-                        model.Add(model.IfThen(model.Eq(00011, horarioAula), model.Eq(jh[d, p], 0)));
-
-
-
-                        // j = U - P - Q + 1
-
                     }
+                    // j = U - P - Q + 1
+                    // j = U - (P + Q) + 1
+                    model.Add(
+                        model.Eq(
+                            j[p, d], model.Sum(uExp, model.Prod(-1, pExp), model.Prod(-1, qExp), model.Constant(1))
+                            )
+                        );
                 }
             }
 
@@ -528,7 +543,8 @@ namespace Horarios
             weights.Add("maxTodasAulas", 1.0);
             weights.Add("maxGeminadas", 0.5);
             weights.Add("minIsoladas", -0.01);
-            weights.Add("minJanelas", -0.1);
+            //weights.Add("minJanelas", -0.1);
+            weights.Add("minJanelasHumberto", -1);
             #endregion
 
             //*******************************************************
@@ -628,12 +644,27 @@ namespace Horarios
             //  de aulas
             //*********************************************************
             #region FO Janelas de aulas
-            var foMinJanelas = model.LinearNumExpr();
+            //var foMinJanelas = model.LinearNumExpr();
+            //for (int p = 0; p < P; p++)
+            //{
+            //    for (int d = 0; d < D; d++)
+            //    {
+            //        foMinJanelas.AddTerm(weights["minJanelas"], j[p, d]);
+            //    }
+            //}
+            #endregion
+
+            //*********************************************************
+            //  Função objetivo para tentar minimizar blocos separados
+            //  de aulas (Método do humberto)
+            //*********************************************************
+            #region FO Janelas de aulas
+            var foMinJanelasHumberto = model.LinearNumExpr();
             for (int p = 0; p < P; p++)
             {
                 for (int d = 0; d < D; d++)
                 {
-                    foMinJanelas.AddTerm(weights["minJanelas"], j[p, d]);
+                    foMinJanelasHumberto.AddTerm(weights["minJanelasHumberto"], jh[p, d]);
                 }
             }
             #endregion
@@ -647,7 +678,8 @@ namespace Horarios
                     foMinAulasIsolada
                     , foGeminada
                     , foTodasAsAulas
-                    , foMinJanelas
+                    //, foMinJanelas
+                    , foMinJanelasHumberto
                     )
                 );
 
