@@ -543,9 +543,9 @@ namespace Horarios
             Dictionary<string, double> weights = new Dictionary<string, double>();
             weights.Add("maxTodasAulas", 1.0);
             weights.Add("maxGeminadas", 1);
-            weights.Add("minIsoladas", 1);
+            weights.Add("minIsoladas", -1);
             //weights.Add("minJanelas", -0.1);
-            weights.Add("minJanelasHumberto", -10);
+            weights.Add("minJanelasHumberto", -2);
             #endregion
 
             //*******************************************************
