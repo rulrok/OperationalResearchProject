@@ -493,8 +493,7 @@ namespace Horarios
                     {
                         for (int h = 0; h < H; h++)
                         {
-                            // 1*{} - ...
-                            qExp.AddTerm(h + 1, x[d, h, t, p]);
+                            qExp.AddTerm(1, x[d, h, t, p]);
 
                             var orPExp = model.LinearNumExpr(0);
                             var orUExp = model.LinearNumExpr(0);
@@ -509,23 +508,23 @@ namespace Horarios
                                 orUExp.AddTerm(1, x[d, next, t, p]);
                             }
 
-                            model.Add(model.IfThen(model.And(model.Ge(orPExp, 0), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAfirst[p, d, t, h], 1)));
-                            model.Add(model.IfThen(model.And(model.Ge(orUExp, 0), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAlast[p, d, t, h], 1)));
+                            model.Add(model.IfThen(model.And(model.Ge(orPExp, 1), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAfirst[p, d, t, h], 1)));
+                            model.Add(model.IfThen(model.And(model.Ge(orUExp, 1), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAlast[p, d, t, h], 1)));
                             var coef = h + 1;
                             pExp.AddTerm(coef, x[d, h, t, p]);
                             pExp.AddTerm(-coef, isThereAlreadyAfirst[p, d, t, h]);
                             //1 2 3 4 5 (h + 1)
                             //1 0 1 0 0 (x[p,d,t,h])
                             //p= ?
-                            qExp.AddTerm(coef, x[d, h, t, p]);
-                            pExp.AddTerm(-coef, isThereAlreadyAlast[p, d, t, h]);
+                            uExp.AddTerm(coef, x[d, h, t, p]);
+                            uExp.AddTerm(-coef, isThereAlreadyAlast[p, d, t, h]);
 
                         }
                     }
                     // j = U - P - Q + 1
                     model.Add(
                         model.IfThen(
-                          model.Ge(qExp, 0)
+                          model.Ge(qExp, 1)
                         , model.Eq(
                                 jh[p, d], model.Sum(uExp, model.Prod(-1, pExp), model.Prod(-1, qExp), model.Constant(1))
                                 )
@@ -544,7 +543,7 @@ namespace Horarios
             #region Pesos
             Dictionary<string, double> weights = new Dictionary<string, double>();
             weights.Add("maxTodasAulas", 1.0);
-            weights.Add("maxGeminadas", 0);
+            weights.Add("maxGeminadas", 1);
             weights.Add("minIsoladas", 1);
             //weights.Add("minJanelas", -0.1);
             weights.Add("minJanelasHumberto", -10);
@@ -702,7 +701,7 @@ namespace Horarios
 
             var solve = model.Solve();
 
-            Console.Beep(880, 1 * 250);
+            Console.Beep(660, 1 * 250);
             Console.Beep(880, 1 * 250);
             sw.Stop();
             #endregion
