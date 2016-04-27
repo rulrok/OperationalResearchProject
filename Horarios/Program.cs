@@ -508,14 +508,13 @@ namespace Horarios
                                 orUExp.AddTerm(1, x[d, next, t, p]);
                             }
 
-                            model.Add(model.IfThen(model.And(model.Ge(orPExp, 1), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAfirst[p, d, t, h], 1)));
-                            model.Add(model.IfThen(model.And(model.Ge(orUExp, 1), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAlast[p, d, t, h], 1)));
                             var coef = h + 1;
+
+                            model.Add(model.IfThen(model.And(model.Ge(orPExp, 1), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAfirst[p, d, t, h], 1)));
                             pExp.AddTerm(coef, x[d, h, t, p]);
                             pExp.AddTerm(-coef, isThereAlreadyAfirst[p, d, t, h]);
-                            //1 2 3 4 5 (h + 1)
-                            //1 0 1 0 0 (x[p,d,t,h])
-                            //p= ?
+
+                            model.Add(model.IfThen(model.And(model.Ge(orUExp, 1), model.Eq(x[d, h, t, p], 1)), model.Eq(isThereAlreadyAlast[p, d, t, h], 1)));
                             uExp.AddTerm(coef, x[d, h, t, p]);
                             uExp.AddTerm(-coef, isThereAlreadyAlast[p, d, t, h]);
 
@@ -694,7 +693,7 @@ namespace Horarios
             Console.Beep(440, 500);
 
             //Define um tempo máximo em segundos para o cplex
-            model.SetParam(Cplex.IntParam.TimeLimit, 30 * 60);
+            model.SetParam(Cplex.IntParam.TimeLimit, 10 * 60);
 
             //Pára o cplex ao encontrar a primeira solução 
             //model.SetParam(Cplex.IntParam.IntSolLim, 1);
