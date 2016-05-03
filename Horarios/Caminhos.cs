@@ -7,6 +7,51 @@ using System.Threading.Tasks;
 
 namespace ProjetoPO
 {
+    class MatrizAdjacenciaSimetrica<T> 
+    {
+        T[] matrizLinear;
+        int N;
+
+        public MatrizAdjacenciaSimetrica(int dimensao)
+        {
+            N = dimensao;
+
+            int tamanhoLinear;
+
+            if (dimensao == 1)
+                tamanhoLinear = 1;
+            else {
+                //Assumindo dimensao par
+                tamanhoLinear = (dimensao + 1) * (dimensao / 2);
+                if (dimensao % 2 != 0)
+                {
+                    //Se impar
+                    tamanhoLinear += (int)Math.Ceiling(dimensao / 2.0);
+                }
+            }
+            matrizLinear = new T[tamanhoLinear];
+
+        }
+
+        public T get(int i, int j)
+        {
+            return matrizLinear[calculaIndiceLinear(i, j)];
+        }
+
+        public T set(int i, int j, T novoValor)
+        {
+            int indice = calculaIndiceLinear(i, j);
+            T valorAntigo = matrizLinear[indice];
+            matrizLinear[indice] = novoValor;
+
+            return valorAntigo;
+        }
+
+        private int calculaIndiceLinear(int i, int j) {
+            return (N * i) + j - ((i * (i + 1)) / 2);
+        }
+    }
+
     class Caminhos
     {
         public static void Main(string[] args)
