@@ -48,6 +48,8 @@ namespace ProjetoPO
         }
 
         private int calculaIndiceLinear(int i, int j) {
+            if (i > j)
+                j = i;
             return (N * i) + j - ((i * (i + 1)) / 2);
         }
     }
