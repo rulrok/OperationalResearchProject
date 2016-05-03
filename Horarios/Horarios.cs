@@ -8,9 +8,9 @@ using System.Collections.Generic;
 
 namespace Horarios
 {
-    class Program
+    class Horarios
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
 
             //*******************************************************
