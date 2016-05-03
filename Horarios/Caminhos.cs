@@ -7,50 +7,60 @@ using System.Threading.Tasks;
 
 namespace ProjetoPO
 {
+
     class MatrizAdjacenciaSimetrica<T> 
     {
         T[] matrizLinear;
-        int N;
+
+        public int N { get; private set; }
+
+        public int LinearSize {
+
+            get
+            {
+                return matrizLinear.Length;
+            }
+        }
 
         public MatrizAdjacenciaSimetrica(int dimensao)
         {
             N = dimensao;
+            matrizLinear = new T[(N * (N + 1)) / 2];
+        }
 
-            int tamanhoLinear;
-
-            if (dimensao == 1)
-                tamanhoLinear = 1;
-            else {
-                //Assumindo dimensao par
-                tamanhoLinear = (dimensao + 1) * (dimensao / 2);
-                if (dimensao % 2 != 0)
-                {
-                    //Se impar
-                    tamanhoLinear += (int)Math.Ceiling(dimensao / 2.0);
-                }
+        public T this[int index]
+        {
+            get
+            {
+                return matrizLinear[index];
             }
-            matrizLinear = new T[tamanhoLinear];
-
         }
 
-        public T get(int i, int j)
+        public T Get(int i, int j)
         {
-            return matrizLinear[calculaIndiceLinear(i, j)];
+            return matrizLinear[CalculaIndiceLinear(i, j)];
         }
 
-        public T set(int i, int j, T novoValor)
+        public T Set(int i, int j, T novoValor)
         {
-            int indice = calculaIndiceLinear(i, j);
+            int indice = CalculaIndiceLinear(i, j);
             T valorAntigo = matrizLinear[indice];
             matrizLinear[indice] = novoValor;
 
             return valorAntigo;
         }
 
-        private int calculaIndiceLinear(int i, int j) {
+        private int CalculaIndiceLinear(int i, int j) {
+
             if (i > j)
-                j = i;
+            {
+                var aux = i;
+                i = j;
+                j = aux;
+            }
+
             return (N * i) + j - ((i * (i + 1)) / 2);
+            //return ((i * i) + i) / 2 + j;
         }
     }
 
@@ -90,20 +100,30 @@ namespace ProjetoPO
 
             1 - read file
             2 - fill matrix
-            3 - tansverse lower triangular (i*col + j + i)
+            3 - traverse lower triangular (i*col + j + i)
 
             */
 
+            throw new NotImplementedException();
+        }
+
+        private static void lerArquivo(string fileName)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void TestMatrixes()
+        {
             var nCols = 4;
             var nRows = 4;
-            var m = new int[nCols * nRows];            
+            var m = new int[nCols * nRows];
             var k = 0;
 
             for (int i = 0; i < nRows; i++)
             {
                 for (int j = 0; j < nCols; j++)
                 {
-                    m[i*nCols + j] = k++;
+                    m[i * nCols + j] = k++;
                 }
             }
 
@@ -119,29 +139,52 @@ namespace ProjetoPO
             }
 
 
-            var upper = new int[(nCols*(nCols+1))/2];
+
+            var upper = new int[(nCols * (nCols + 1)) / 2];
 
             for (int i = 0; i < nRows; i++)
             {
                 for (int j = 0; j < nCols; j++)
                 {
                     int x = ((i * i) + i) / 2 + j;
-                    upper[x] = m[i*nCols + j];
+                    upper[x] = m[i * nCols + j];
                 }
             }
 
-            Console.WriteLine();
+
+            Console.WriteLine("Victor:");
             for (int i = 0; i < upper.Length; i++)
             {
                 Console.Write(string.Format("[{0:D2}]", upper[i]));
             }
 
-            throw new NotImplementedException();
-        }
 
-        private static void lerArquivo(string fileName)
-        {
-            throw new NotImplementedException();
+            Console.WriteLine("Mr");
+            var mr = new MatrizAdjacenciaSimetrica<int>(nRows);
+            k = 0;
+            for (int i = 0; i < nRows; i++)
+            {
+                for (int j = 0; j < nCols; j++)
+                {
+                    mr.Set(i, j, k++);
+                }
+            }
+
+            for (int i = 0; i < nRows; i++)
+            {
+                for (int j = 0; j < nCols; j++)
+                {
+                    Console.Write(String.Format("[{0:D2}]", mr.Get(i, j)));
+                }
+
+                Console.WriteLine();
+            }
+
+            Console.WriteLine();
+            for (int i = 0; i < mr.LinearSize; i++)
+            {
+                Console.Write(string.Format("[{0:D2}]", mr[i]));
+            }
         }
     }
 }
