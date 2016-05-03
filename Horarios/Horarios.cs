@@ -6,7 +6,7 @@ using ILOG.CPLEX;
 using System.Diagnostics;
 using System.Collections.Generic;
 
-namespace Horarios
+namespace ProjetoPO
 {
     class Horarios
     {
