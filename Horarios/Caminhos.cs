@@ -139,6 +139,7 @@ namespace ProjetoPO
                 }
             }
 
+            //Restrição de que todas as arestas que saem também entram
             //Fixa linha
             for (int i = 0; i < X.N; i++)
             {
@@ -153,19 +154,20 @@ namespace ProjetoPO
 
             }
 
-            
-            /*
+            //Função objetivo
+            var fo = model.LinearNumExpr();
+            for (int i = 0; i < X.N; i++)
+            {
+                for (int j = i; j < X.N; j++)
+                {
+                    fo.AddTerm(matriz[i, j], X[i, j]);
+                }
+            }
 
-            V a in A
-            Xij e {0,1}
+            //Minimize
+            model.AddMinimize(fo);
 
-            E(i = 0 -> A)E(j = i + 1 -> V) cij.xij
-
-            1 - read file
-            2 - fill matrix
-            3 - traverse lower triangular (i*col + j + i)
-
-            */
+            model.Solve();
 
         }
 
