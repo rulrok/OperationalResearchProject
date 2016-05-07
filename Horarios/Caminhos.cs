@@ -96,7 +96,7 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) != "test")
+                if (Path.GetFileNameWithoutExtension(file) != "brazil58")
                 {
                     continue;
                 }
