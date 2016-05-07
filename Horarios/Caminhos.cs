@@ -139,6 +139,21 @@ namespace ProjetoPO
                 }
             }
 
+            //Fixa linha
+            for (int i = 0; i < X.N; i++)
+            {
+                var exp = model.LinearNumExpr();
+
+                //Varia coluna
+                for (int j = 0; j < X.N; j++)
+                {
+                    exp.AddTerm(1.0, X[i, j]);
+                }
+                model.AddEq(exp, 2.0);
+
+            }
+
+            
             /*
 
             V a in A
