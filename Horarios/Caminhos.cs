@@ -133,7 +133,7 @@ namespace ProjetoPO
             var X = new MatrizAdjacenciaSimetrica<INumVar>(matriz.N);
             for (int i = 0; i < matriz.N; i++)
             {
-                for (int j = 0; j < matriz.N; j++)
+                for (int j = i; j < matriz.N; j++)
                 {
                     X[i, j] = model.BoolVar();
                 }
