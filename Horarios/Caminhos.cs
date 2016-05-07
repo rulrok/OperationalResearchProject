@@ -8,13 +8,14 @@ using System.Threading.Tasks;
 namespace ProjetoPO
 {
 
-    class MatrizAdjacenciaSimetrica<T> 
+    class MatrizAdjacenciaSimetrica<T>
     {
         T[] matrizLinear;
 
         public int N { get; private set; }
 
-        public int LinearSize {
+        public int LinearSize
+        {
 
             get
             {
@@ -50,7 +51,8 @@ namespace ProjetoPO
             return valorAntigo;
         }
 
-        private int CalculaIndiceLinear(int i, int j) {
+        private int CalculaIndiceLinear(int i, int j)
+        {
 
             if (i > j)
             {
@@ -59,8 +61,8 @@ namespace ProjetoPO
                 j = aux;
             }
 
-            return (N * i) + j - ((i * (i + 1)) / 2);
-            //return ((i * i) + i) / 2 + j;
+            //return (N * i) + j - ((i * (i + 1)) / 2);
+            return ((i * i) + i) / 2 + j;
         }
     }
 
@@ -74,15 +76,13 @@ namespace ProjetoPO
             //
             //*******************************************************
 
-            var files = Directory.GetFiles(@"./caminhos/");
+            var files = Directory.GetFiles(@"./grafos/");
 
             foreach (var file in files)
             {
 
                 encontrarSolucao(file);
             }
-
-            encontrarSolucao("");
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
             Console.ReadKey(true);
@@ -91,6 +91,9 @@ namespace ProjetoPO
 
         private static void encontrarSolucao(string fileName)
         {
+
+            MatrizAdjacenciaSimetrica<int> matriz;
+            lerArquivo(fileName, out matriz);
             /*
             
             V a in A
@@ -104,12 +107,35 @@ namespace ProjetoPO
 
             */
 
-            throw new NotImplementedException();
         }
 
-        private static void lerArquivo(string fileName)
+        private static void lerArquivo(string fileName, out MatrizAdjacenciaSimetrica<int> matriz)
         {
-            throw new NotImplementedException();
+            var lines = File.ReadAllLines(fileName);
+
+            lines = lines.Where(l => !string.IsNullOrWhiteSpace(l)).ToArray();
+
+            var name = lines[0];
+            var type = lines[1];
+            //line 2 = comments
+            var dimension = lines[3].Split(':');
+            matriz = new MatrizAdjacenciaSimetrica<int>(int.Parse(dimension[1]));
+            //line 4 = EDGE_WEIGHT_TYPE
+            //line 5 = EDGE_WEIGHT_FORMAT
+            //line 6 = EDGE_WEIGHT_SECTION
+
+            for (int fileLineCount = 7, i = 0; i < lines.Length; fileLineCount++, i++)
+            {
+                var values = lines[fileLineCount].Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (values[0].Equals("EOF"))
+                {
+                    break;
+                }
+                for (int j = 0; j < values.Length; j++)
+                {
+                    matriz.Set(i, j, int.Parse(values[j]));
+                }
+            }
         }
 
         private static void TestMatrixes()
