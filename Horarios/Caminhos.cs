@@ -78,7 +78,7 @@ namespace ProjetoPO
             return (N * i) + j - ((i * (i + 1)) / 2);
         }
 
-        public override string ToString()
+        public string ToString(Func<T, string> transformer)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -86,13 +86,26 @@ namespace ProjetoPO
             {
                 for (int j = 0; j < N; j++)
                 {
-                    sb.AppendFormat("{0:D4}", Get(i, j)).Append(" ");
+                    var value = GetStringValue(i, j, transformer);
+                    sb.Append(value).Append(" ");
                 }
                 sb.Append("\n");
             }
 
 
             return sb.ToString();
+        }
+        public override string ToString()
+        {
+            return ToString(null);
+        }
+
+        private string GetStringValue(int i, int j, Func<T, string> transformer = null)
+        {
+            if (transformer != null)
+                return transformer(Get(i, j));
+
+            return this[i, j].ToString();
         }
     }
 
@@ -168,6 +181,8 @@ namespace ProjetoPO
             model.AddMinimize(fo);
 
             model.Solve();
+
+            Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
 
         }
 
