@@ -61,8 +61,24 @@ namespace ProjetoPO
                 j = aux;
             }
 
-            //return (N * i) + j - ((i * (i + 1)) / 2);
-            return ((i * i) + i) / 2 + j;
+            return (N * i) + j - ((i * (i + 1)) / 2);
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < N; i++)
+            {
+                for (int j = 0; j < N; j++)
+                {
+                    sb.AppendFormat("{0:D4}", Get(i, j)).Append(" ");
+                }
+                sb.Append("\n");
+            }
+
+
+            return sb.ToString();
         }
     }
 
@@ -80,7 +96,10 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
-
+                if (Path.GetFileNameWithoutExtension(file) != "test")
+                {
+                    continue;
+                }
                 encontrarSolucao(file);
             }
 
@@ -94,8 +113,10 @@ namespace ProjetoPO
 
             MatrizAdjacenciaSimetrica<int> matriz;
             lerArquivo(fileName, out matriz);
+
+            Console.Write(matriz);
             /*
-            
+
             V a in A
             Xij e {0,1}
 
@@ -126,14 +147,15 @@ namespace ProjetoPO
 
             for (int fileLineCount = 7, i = 0; i < lines.Length; fileLineCount++, i++)
             {
-                var values = lines[fileLineCount].Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                if (values[0].Equals("EOF"))
+                var columns = lines[fileLineCount].Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (columns[0].Equals("EOF"))
                 {
                     break;
                 }
-                for (int j = 0; j < values.Length; j++)
+                matriz.Set(i, i, 0);
+                for (int fileColumnCount = 0, j = i + 1; fileColumnCount < columns.Length; fileColumnCount++, j++)
                 {
-                    matriz.Set(i, j, int.Parse(values[j]));
+                    matriz.Set(i, j, int.Parse(columns[fileColumnCount]));
                 }
             }
         }
