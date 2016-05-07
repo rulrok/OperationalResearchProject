@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ILOG.Concert;
+using ILOG.CPLEX;
 
 namespace ProjetoPO
 {
@@ -34,6 +36,18 @@ namespace ProjetoPO
             get
             {
                 return matrizLinear[index];
+            }
+        }
+
+        public T this[int i, int j]
+        {
+            get
+            {
+                return Get(i, j);
+            }
+            set
+            {
+                Set(i, j, value);
             }
         }
 
@@ -114,7 +128,17 @@ namespace ProjetoPO
             MatrizAdjacenciaSimetrica<int> matriz;
             lerArquivo(fileName, out matriz);
 
-            Console.Write(matriz);
+            Cplex model = new Cplex();
+
+            var X = new MatrizAdjacenciaSimetrica<INumVar>(matriz.N);
+            for (int i = 0; i < matriz.N; i++)
+            {
+                for (int j = 0; j < matriz.N; j++)
+                {
+                    X[i, j] = model.BoolVar();
+                }
+            }
+
             /*
 
             V a in A
