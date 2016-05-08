@@ -105,7 +105,7 @@ namespace ProjetoPO
         private string GetStringValue(int i, int j, Func<T, string> transformer = null)
         {
             if (transformer != null)
-                return transformer(Get(i, j));
+                return transformer(this[i, j]);
 
             return this[i, j].ToString();
         }
@@ -168,6 +168,16 @@ namespace ProjetoPO
 
                 model.AddEq(exp, 2.0);
 
+            }
+
+            //Restrição para não usar a diagonal principal
+            {
+                var exp = model.LinearNumExpr();
+                for (int i = 0; i < matriz.N; i++)
+                {
+                    exp.AddTerm(1.0, X[i, i]);
+                }
+                model.AddEq(exp, 0);
             }
 
             //Função objetivo
