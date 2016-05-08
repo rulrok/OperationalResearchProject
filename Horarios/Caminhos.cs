@@ -102,6 +102,7 @@ namespace ProjetoPO
             //Transformador trivial
             return ToString((t) => t.ToString());
         }
+
     }
 
     class Caminhos
@@ -186,9 +187,52 @@ namespace ProjetoPO
             //Minimize
             model.AddMinimize(fo);
 
-            model.Solve();
+            var solved = model.Solve();
 
+            if (!solved)
+            {
+                return;
+            }
+            Console.WriteLine("Grafo:");
+            Console.WriteLine(matriz);
+            Console.WriteLine("---------------\n");
+            Console.WriteLine("Arestas escolhidas:");
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
+
+            var produto = new MatrizAdjacenciaSimetrica<double>(matriz.N);
+            var @base = new MatrizAdjacenciaSimetrica<double>(matriz.N);
+            for (int i = 0; i < matriz.N; i++)
+            {
+                //Matriz identidade
+                @base[i, i] = 1;
+            }
+
+            for (int i = 0; i < matriz.N; i++)
+            {
+                for (int j = i; j < matriz.N; j++)
+                {
+                    @base[i, j] += model.GetValue(X[i, j]);
+                    produto[i, j] = @base[i, j];
+                }
+            }
+
+            for (int count = 0; count < matriz.N; count++)
+            {
+                for (int i = 0; i < matriz.N; i++)
+                {
+                    for (int j = i; j < matriz.N; j++)
+                    {
+                        for (int k = 0; k < matriz.N; k++)
+                        {
+                            produto[i, j] = @base[i, k] * produto[k, j];
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine("---------------\n");
+            Console.WriteLine("Produto:");
+            Console.Write(produto);
 
 
             /*
