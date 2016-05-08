@@ -175,6 +175,31 @@ namespace ProjetoPO
                 model.AddEq(exp, matriz.N);
             }
 
+            var produto = new MatrizAdjacenciaSimetrica<INumExpr>(matriz.N);
+
+            for (int potencia = 0; potencia < matriz.N; potencia++)
+            {
+
+                //for (int i = 0; i < 1; i++)
+                //{
+                var linhaExpressao = model.LinearNumExpr();
+                for (int j = 0; j < matriz.N; j++)
+                {
+                    for (int k = 0; k < matriz.N; k++)
+                    {
+                        // produto = produto + produto * base
+                        produto[0, j] = model.Sum(produto[0, j], model.Prod(X[0, k], produto[k, j]));
+                    }
+
+                }
+                //}
+            }
+            for (int j = 0; j < matriz.N; j++)
+            {
+                var a = produto[0, j];
+                model.AddGe(a, 1.0);
+            }
+
             //Função objetivo
             var fo = model.LinearNumExpr();
             for (int i = 0; i < X.N; i++)
@@ -200,7 +225,7 @@ namespace ProjetoPO
             Console.WriteLine("Arestas escolhidas:");
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
 
-            var produto = new MatrizAdjacenciaSimetrica<double>(matriz.N);
+            var produtoNumerico = new MatrizAdjacenciaSimetrica<double>(matriz.N);
             var @base = new MatrizAdjacenciaSimetrica<double>(matriz.N);
             for (int i = 0; i < matriz.N; i++)
             {
@@ -213,7 +238,7 @@ namespace ProjetoPO
                 for (int j = i; j < matriz.N; j++)
                 {
                     @base[i, j] += model.GetValue(X[i, j]);
-                    produto[i, j] = @base[i, j];
+                    produtoNumerico[i, j] = @base[i, j];
                 }
             }
 
@@ -225,7 +250,7 @@ namespace ProjetoPO
                     {
                         for (int k = 0; k < matriz.N; k++)
                         {
-                            produto[i, j] = @base[i, k] * produto[k, j];
+                            produtoNumerico[i, j] = @base[i, k] * produtoNumerico[k, j];
                         }
                     }
                 }
