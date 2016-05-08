@@ -157,21 +157,22 @@ namespace ProjetoPO
                 //Varia coluna
                 for (int j = 0; j < X.N; j++)
                 {
-                    exp.AddTerm(1.0, X[i, j]);
+                    if (i != j)
+                        exp.AddTerm(1.0, X[i, j]);
                 }
 
                 model.AddEq(exp, 2.0);
 
             }
 
-            //Restrição para não usar a diagonal principal
+            //Restrição para que a diagonal sempre tenha valores 1
             {
                 var exp = model.LinearNumExpr();
                 for (int i = 0; i < matriz.N; i++)
                 {
                     exp.AddTerm(1.0, X[i, i]);
                 }
-                model.AddEq(exp, 0);
+                model.AddEq(exp, matriz.N);
             }
 
             //Função objetivo
