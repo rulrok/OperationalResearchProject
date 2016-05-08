@@ -6,9 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using ILOG.Concert;
 using ILOG.CPLEX;
+using QuickGraph;
 
 namespace ProjetoPO
 {
+    using Vertex = Int32;
 
     class MatrizAdjacenciaSimetrica<T>
     {
@@ -123,7 +125,7 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) != "brazil58")
+                if (Path.GetFileNameWithoutExtension(file) != "test")
                 {
                     continue;
                 }
@@ -163,6 +165,7 @@ namespace ProjetoPO
                 {
                     exp.AddTerm(1.0, X[i, j]);
                 }
+
                 model.AddEq(exp, 2.0);
 
             }
@@ -183,6 +186,21 @@ namespace ProjetoPO
             model.Solve();
 
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
+
+            /*
+            int numComponentes = calcComponentes(X);
+
+            if (numComponentes == 1) solved
+            else {
+
+            foreach (component) {
+
+
+
+            }
+
+            }
+            */
 
         }
 
@@ -289,6 +307,40 @@ namespace ProjetoPO
             {
                 Console.Write(string.Format("[{0:D2}]", mr[i]));
             }
+        }
+
+        static void Components()
+        {
+            // The graph.
+            Vertex[,] G = new Vertex[,] {
+
+            { 1, 1, 0, 0, 0 }, // each line being an edge.
+            { 1, 0, 1, 0, 0 },
+            { 0, 1, 1, 0, 0 },
+            { 0, 0, 0, 1, 1 },
+            { 0, 0, 0, 1, 1 }
+
+            };
+
+            var gVertexes = new Vertex[] { 1, 2, 3, 4, 5 };
+            var vIndex = new int[] { 0, 0, 0, 0, 0 };
+
+            // Each list contains a set of vertexes
+            // that form a subtour in the given G.
+            var components = new List<List<Vertex>>();
+
+            // Contains the vertexes that compose
+            // the current path being explored.
+            var stack = new Stack<Vertex>();
+
+            int index = 0;
+
+
+            foreach (Vertex v in gVertexes)
+            {
+
+            }
+
         }
     }
 }
