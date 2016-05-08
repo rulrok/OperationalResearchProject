@@ -88,7 +88,7 @@ namespace ProjetoPO
             {
                 for (int j = 0; j < N; j++)
                 {
-                    var value = GetStringValue(i, j, transformer);
+                    var value = transformer(this[i, j]);
                     sb.Append(value).Append(" ");
                 }
                 sb.Append("\n");
@@ -99,15 +99,8 @@ namespace ProjetoPO
         }
         public override string ToString()
         {
-            return ToString(null);
-        }
-
-        private string GetStringValue(int i, int j, Func<T, string> transformer = null)
-        {
-            if (transformer != null)
-                return transformer(this[i, j]);
-
-            return this[i, j].ToString();
+            //Transformador trivial
+            return ToString((t) => t.ToString());
         }
     }
 
@@ -196,6 +189,7 @@ namespace ProjetoPO
             model.Solve();
 
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
+
 
             /*
             int numComponentes = calcComponentes(X);
