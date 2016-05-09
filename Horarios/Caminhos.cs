@@ -176,23 +176,28 @@ namespace ProjetoPO
             }
 
             var produto = new MatrizAdjacenciaSimetrica<INumExpr>(matriz.N);
+            for (int i = 0; i < matriz.N; i++)
+            {
+                for (int j = i; j < matriz.N; j++)
+                {
+                    produto[i, j] = X[i, j];
+                }
+            }
 
             for (int potencia = 0; potencia < matriz.N; potencia++)
             {
 
-                //for (int i = 0; i < 1; i++)
-                //{
-                var linhaExpressao = model.LinearNumExpr();
-                for (int j = 0; j < matriz.N; j++)
+                for (int i = 0; i < 1; i++) //Calcula apenas a primeira linha da matriz resultante (for apenas para legibilidade)
                 {
-                    for (int k = 0; k < matriz.N; k++)
+                    for (int j = 0; j < matriz.N; j++)
                     {
-                        // produto = produto + produto * base
-                        produto[0, j] = model.Sum(produto[0, j], model.Prod(X[0, k], produto[k, j]));
-                    }
+                        for (int k = 0; k < matriz.N; k++)
+                        {
+                            produto[0, j] = model.Sum(produto[0, j], model.Prod(X[0, k], produto[k, j]));
+                        }
 
+                    }
                 }
-                //}
             }
             for (int j = 0; j < matriz.N; j++)
             {
@@ -219,6 +224,14 @@ namespace ProjetoPO
             {
                 return;
             }
+
+            Console.WriteLine("Solution status = " + model.GetStatus());
+            Console.WriteLine("--------------------------------------------");
+            Console.WriteLine();
+            Console.WriteLine("Solution found:");
+            Console.WriteLine(" Objective value = " + model.ObjValue);
+
+            Console.WriteLine();
             Console.WriteLine("Grafo:");
             Console.WriteLine(matriz);
             Console.WriteLine("---------------\n");
@@ -258,7 +271,7 @@ namespace ProjetoPO
 
             Console.WriteLine("---------------\n");
             Console.WriteLine("Produto:");
-            Console.Write(produto);
+            Console.Write(produtoNumerico);
 
 
             /*
