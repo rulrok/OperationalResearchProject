@@ -175,41 +175,29 @@ namespace ProjetoPO
                 model.AddEq(exp, matriz.N);
             }
 
-            var produto = new MatrizAdjacenciaSimetrica<INumExpr>(matriz.N);
-            for (int i = 0; i < matriz.N; i++)
-            {
-                for (int j = i; j < matriz.N; j++)
-                {
-                    produto[i, j] = X[i, j];
-                }
-            }
+            var resultadoNumExp = new MatrizAdjacenciaSimetrica<INumExpr>(matriz.N);
 
-            for (int potencia = 0; potencia < matriz.N; potencia++)
+            //for (int potencia = 0; potencia < matriz.N; potencia++)
             {
-
-                for (int i = 0; i < 1; i++) //Calcula apenas a primeira linha da matriz resultante (for apenas para legibilidade)
+                for (int i = 0; i < matriz.N; i++) //Calcula apenas a primeira linha da matriz resultante (for apenas para legibilidade)
                 {
                     for (int j = 0; j < matriz.N; j++)
                     {
+                        var sum = model.NumExpr();
                         for (int k = 0; k < matriz.N; k++)
                         {
-                            produto[0, j] = model.Sum(produto[0, j], model.Prod(X[0, k], produto[k, j]));
+                            sum = model.Sum(sum, model.Prod(X[i, k], X[i, j]));
                         }
-
+                        resultadoNumExp[i, j] = sum;
                     }
                 }
-            }
-            for (int j = 0; j < matriz.N; j++)
-            {
-                var a = produto[0, j];
-                model.AddGe(a, 1.0);
             }
 
             //Função objetivo
             var fo = model.LinearNumExpr();
             for (int i = 0; i < X.N; i++)
             {
-                for (int j = i; j < X.N; j++)
+                for (int j = 0; j < X.N; j++)
                 {
                     fo.AddTerm(matriz[i, j], X[i, j]);
                 }
@@ -238,41 +226,39 @@ namespace ProjetoPO
             Console.WriteLine("Arestas escolhidas:");
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
 
-            var produtoNumerico = new MatrizAdjacenciaSimetrica<double>(matriz.N);
-            var @base = new MatrizAdjacenciaSimetrica<double>(matriz.N);
-            for (int i = 0; i < matriz.N; i++)
-            {
-                //Matriz identidade
-                @base[i, i] = 1;
-            }
+            Console.WriteLine("---------------\n");
+            Console.WriteLine("Produto numérico:");
+            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matriz.N);
+            var resultadoDouble = new MatrizAdjacenciaSimetrica<double>(matriz.N);
 
             for (int i = 0; i < matriz.N; i++)
             {
                 for (int j = i; j < matriz.N; j++)
                 {
-                    @base[i, j] += model.GetValue(X[i, j]);
-                    produtoNumerico[i, j] = @base[i, j];
+                    Xdouble[i, j] = model.GetValue(X[i, j]);
                 }
             }
 
-            for (int count = 0; count < matriz.N; count++)
+            //for (int count = 0; count < matriz.N; count++)
             {
                 for (int i = 0; i < matriz.N; i++)
                 {
-                    for (int j = i; j < matriz.N; j++)
+                    for (int j = 0; j < matriz.N; j++)
                     {
+                        double sum = 0;
                         for (int k = 0; k < matriz.N; k++)
                         {
-                            produtoNumerico[i, j] = @base[i, k] * produtoNumerico[k, j];
+                            sum = sum + Xdouble[i, k] * Xdouble[k, j];
                         }
+                        resultadoDouble[i, j] = sum;
                     }
                 }
             }
+            Console.Write(resultadoDouble);
 
             Console.WriteLine("---------------\n");
-            Console.WriteLine("Produto:");
-            Console.Write(produtoNumerico);
-
+            Console.WriteLine("Resultado num exp:");
+            Console.Write(resultadoNumExp.ToString((t) => model.GetValue(t).ToString()));
 
             /*
             int numComponentes = calcComponentes(X);
