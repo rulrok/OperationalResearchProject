@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjetoPO", "Horarios\ProjetoPO.csproj", "{A2585D15-4068-4F6F-920B-3B9D9684D9ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphPlotter", "..\Documents\Visual Studio 2015\Projects\PlotGraph\GraphPlotter\GraphPlotter.csproj", "{D719BEAD-4FE4-4BF2-AA34-99064CD5A021}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphPlotter", "GraphPlotter\GraphPlotter.csproj", "{3EC2C6FB-70DB-4F96-A387-D0FA7F9CA27C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{A2585D15-4068-4F6F-920B-3B9D9684D9ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2585D15-4068-4F6F-920B-3B9D9684D9ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2585D15-4068-4F6F-920B-3B9D9684D9ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D719BEAD-4FE4-4BF2-AA34-99064CD5A021}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D719BEAD-4FE4-4BF2-AA34-99064CD5A021}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D719BEAD-4FE4-4BF2-AA34-99064CD5A021}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D719BEAD-4FE4-4BF2-AA34-99064CD5A021}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EC2C6FB-70DB-4F96-A387-D0FA7F9CA27C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EC2C6FB-70DB-4F96-A387-D0FA7F9CA27C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EC2C6FB-70DB-4F96-A387-D0FA7F9CA27C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EC2C6FB-70DB-4F96-A387-D0FA7F9CA27C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
