@@ -54,6 +54,9 @@
     <StartupObject>ProjetoPO.MainClass</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GraphPlotter">
+      <HintPath>..\..\Documents\Visual Studio 2015\Projects\PlotGraph\GraphPlotter\bin\Debug\GraphPlotter.dll</HintPath>
+    </Reference>
     <Reference Include="ILOG.Concert">
       <HintPath>..\lib\ILOG.Concert.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -79,6 +82,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />

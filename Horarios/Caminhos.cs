@@ -10,6 +10,9 @@ using QuickGraph;
 
 namespace ProjetoPO
 {
+    using Plotter;
+    using System.Drawing;
+    using static Plotter.GraphPlotter;
     using Vertex = Int32;
 
     class MatrizAdjacenciaSimetrica<T>
@@ -97,6 +100,7 @@ namespace ProjetoPO
 
             return sb.ToString();
         }
+
         public override string ToString()
         {
             //Transformador trivial
@@ -127,7 +131,7 @@ namespace ProjetoPO
             }
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
-            Console.ReadKey(true);
+            //Console.ReadKey(true);
 
         }
 
@@ -231,6 +235,8 @@ namespace ProjetoPO
             var Xdouble = new MatrizAdjacenciaSimetrica<double>(matriz.N);
             var resultadoDouble = new MatrizAdjacenciaSimetrica<double>(matriz.N);
 
+            
+
             for (int i = 0; i < matriz.N; i++)
             {
                 for (int j = i; j < matriz.N; j++)
@@ -238,6 +244,8 @@ namespace ProjetoPO
                     Xdouble[i, j] = model.GetValue(X[i, j]);
                 }
             }
+
+            Plot(Xdouble);
 
             //for (int count = 0; count < matriz.N; count++)
             {
@@ -413,6 +421,55 @@ namespace ProjetoPO
             {
 
             }
+
+        }
+
+        static void Plot<T>(MatrizAdjacenciaSimetrica<T> matrix) where T : struct, IComparable
+        {
+            // We have N vertexes.
+            var vertexes = new List<Point>(matrix.N);
+
+            // And we have at most "number of vertexes" edges.
+            // The last vertex does not have to analysed because
+            // new edges can only happen if a vertex connects
+            // to a vertex with an index greater than its own,
+            // i. e., if vertex 5 connects to vertex 4, than when
+            // analysing vertex 4 the edge will be included.
+            var edges = new List<Edge>(vertexes.Capacity - 1);
+
+            // Randomly distribute the N vertexes in a 10x10 cartesian plane.
+            var rand = new Random();
+            for (int i = 0; i < matrix.N; i++)
+            {
+                vertexes.Add(new Point { X = rand.Next(0, 21), Y = rand.Next(1, 21) });
+            }
+
+            // Assemble edges.
+            for (int i = 0; i < matrix.N - 1; i++)
+            {
+                var edge = new Edge() { VertexIndex = i };
+                // We can only have 2 edges per vertex.
+                edge.ConnectingVertexesIndexes = new List<int>(2);
+
+
+                for (int j = i + 1; j < matrix.N; j++)
+                {
+                    // Scan only upper matrix.
+                    // Might blow up on CompareTo if T is Int.
+                    if (matrix[i,j].CompareTo(0.0) != 0)
+                    {
+                        edge.ConnectingVertexesIndexes.Add(j);
+                    }
+
+                }
+
+                edges.Add(edge);
+            }
+
+
+            var bmp = GraphPlotter.Plot(vertexes, edges, 1024, 768);
+            bmp.Save("graph.png");
+            bmp.Dispose();
 
         }
     }
