@@ -8,9 +8,17 @@ using ILOG.Concert;
 using ILOG.CPLEX;
 using QuickGraph;
 
+/*
+iterativo
++
+callback (cplex namespace)
+-> dizer que vertice nao pode ir para ele mesmo.
+*/
+
 namespace ProjetoPO
 {
     using Plotter;
+    using System.Diagnostics;
     using System.Drawing;
     using static Plotter.GraphPlotter;
     using Vertex = Int32;
@@ -127,11 +135,13 @@ namespace ProjetoPO
                 {
                     continue;
                 }
+
                 encontrarSolucao(file);
+                //Solve(file);
             }
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
-            //Console.ReadKey(true);
+            Console.ReadKey(true);
 
         }
 
@@ -244,8 +254,6 @@ namespace ProjetoPO
                     Xdouble[i, j] = model.GetValue(X[i, j]);
                 }
             }
-
-            Plot(Xdouble);
 
             //for (int count = 0; count < matriz.N; count++)
             {
@@ -424,39 +432,59 @@ namespace ProjetoPO
 
         }
 
-        static void Plot<T>(MatrizAdjacenciaSimetrica<T> matrix) where T : struct, IComparable
+
+
+        /// <summary>
+        /// Reads file and plots the vertexes.
+        /// </summary>
+        /// <param name="filePath">Path to graph file.</param>
+        /// <param name="plotFileName">Name of the plot image that will be created.</param>
+        /// <returns>List of points read from file.</returns>
+        static List<PointF> ReadPoints(string filePath, bool plot = true, string plotFileName = "graphVertexes")
         {
-            // We have N vertexes.
-            var vertexes = new List<Point>(matrix.N);
+            var file = File.ReadAllLines(filePath);
 
-            // And we have at most "number of vertexes" edges.
-            // The last vertex does not have to analysed because
-            // new edges can only happen if a vertex connects
-            // to a vertex with an index greater than its own,
-            // i. e., if vertex 5 connects to vertex 4, than when
-            // analysing vertex 4 the edge will be included.
-            var edges = new List<Edge>(vertexes.Capacity - 1);
+            // Exclude first line nonsense.
+            var filePoints = file.Skip(1).ToList();
 
-            // Randomly distribute the N vertexes in a 10x10 cartesian plane.
-            var rand = new Random();
-            for (int i = 0; i < matrix.N; i++)
+            var chartPoints = new List<PointF>(filePoints.Count);
+
+            foreach (var point in filePoints)
             {
-                vertexes.Add(new Point { X = rand.Next(0, 21), Y = rand.Next(1, 21) });
+                var xy = point.Split(' ');
+                chartPoints.Add(new PointF { X = float.Parse(xy[0]), Y = float.Parse(xy[1]) });
             }
 
+
+            if (plot)
+            {
+                var bmp = GraphPlotter.Plot(chartPoints, new List<Edge>(), 1024 * 5, 768 * 3);
+                bmp.Save(plotFileName + ".png");
+                bmp.Dispose();
+            }
+
+            return chartPoints;
+        }
+
+        static void PlotPath(MatrizAdjacenciaSimetrica<double> matrix, List<PointF> points, string plotFileName = "TSP")
+        {
+            // Only N - 1 points have edges.
+            // We need not compute the edge of the
+            // lats vertex.
+            var edges = new List<Edge>(points.Count - 1);
+
             // Assemble edges.
-            for (int i = 0; i < matrix.N - 1; i++)
+            for (int i = 0; i < edges.Capacity; i++)
             {
                 var edge = new Edge() { VertexIndex = i };
+
                 // We can only have 2 edges per vertex.
                 edge.ConnectingVertexesIndexes = new List<int>(2);
-
 
                 for (int j = i + 1; j < matrix.N; j++)
                 {
                     // Scan only upper matrix.
-                    // Might blow up on CompareTo if T is Int.
-                    if (matrix[i,j].CompareTo(0.0) != 0)
+                    if (matrix[i, j] != 0d)
                     {
                         edge.ConnectingVertexesIndexes.Add(j);
                     }
@@ -466,11 +494,269 @@ namespace ProjetoPO
                 edges.Add(edge);
             }
 
-
-            var bmp = GraphPlotter.Plot(vertexes, edges, 1024, 768);
-            bmp.Save("graph.png");
+            var bmp = GraphPlotter.Plot(points, edges, 1024 * 5, 768 * 3);
+            bmp.Save(plotFileName + ".png");
             bmp.Dispose();
-
         }
+
+        /// <summary>
+        /// Creates an adjacency matrix where each [i,j]
+        /// represents the distance between the point 'i'
+        /// and point 'j'.
+        /// </summary>
+        /// <param name="points">List of points.</param>
+        /// <returns>The adjacency matrix.</returns>
+        static MatrizAdjacenciaSimetrica<double> AssembleMatrix(List<PointF> points)
+        {
+            var matrix = new MatrizAdjacenciaSimetrica<double>(points.Count);
+
+            for (int i = 0; i < matrix.N - 1; i++)
+            {
+                //matrix.Set(i, i, 0);
+
+                for (int j = i + 1; j < matrix.N; j++)
+                {
+                    matrix.Set(i, j, Distance(points[i], points[j]));
+                }
+            }
+
+            // Last row, last column.
+            //matrix.Set(matrix.N - 1, matrix.N - 1, 0);
+
+            return matrix;
+        }
+
+
+        private static void Solve(string filePath)
+        {
+            var points = ReadPoints(filePath);
+            var matrix = AssembleMatrix(points);
+
+            Cplex model = new Cplex();
+
+            // Each [i,j] is a bool var indicating whether
+            // there is a connection between the points 'i' and 'j'.
+            var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    X[i, j] = model.BoolVar();
+                }
+            }
+
+            // Limits the number of connections
+            // a point can have to 2.
+            for (int i = 0; i < X.N; i++)
+            {
+                var exp = model.LinearNumExpr();
+
+                // Columns...
+                for (int j = 0; j < X.N; j++)
+                {
+                    if (i != j)
+                    {
+                        exp.AddTerm(1.0, X[i, j]);
+                    }
+                }
+
+                model.AddEq(exp, 2.0);
+
+            }
+
+            // Force main diagonal to be 1.
+            // (used to calculate pow of X).
+            {
+                var exp = model.LinearNumExpr();
+                for (int i = 0; i < matrix.N; i++)
+                {
+                    exp.AddTerm(1.0, X[i, i]);
+                }
+                model.AddEq(exp, matrix.N);
+            }
+
+            #region Matrix Pow
+
+            var resultadoNumExp = new MatrizAdjacenciaSimetrica<INumExpr>(matrix.N);
+            var placeHolder = new MatrizAdjacenciaSimetrica<INumExpr>(matrix.N);
+            double avg = 0;
+            double timesSum = 0;
+            List<double> times = new List<double>(matrix.N);
+
+            var total = new Stopwatch();
+            total.Start();
+
+            for (int potencia = 0; potencia < matrix.N - 1; potencia++)
+            {
+                var sw = new Stopwatch();
+                sw.Start();
+
+                for (int i = 0; i < matrix.N; i++) //Calcula apenas a primeira linha da matriz resultante (for apenas para legibilidade)
+                {
+                    for (int j = 0; j < matrix.N; j++)
+                    {
+                        var sum = model.NumExpr();
+
+                        for (int k = 0; k < matrix.N; k++)
+                        {
+                            if (potencia == 0)
+                            {
+                                sum = model.Sum(sum, model.Prod(X[i, k], X[k, j]));
+                            }
+                            else
+                            {
+                                sum = model.Sum(sum, model.Prod(X[i, k], placeHolder[k, j]));
+                            }
+                        }
+
+                        resultadoNumExp[i, j] = sum;
+                    }
+                    
+                }
+
+                // Copy result to placeHolder.
+                for (int i = 0; i < matrix.N; i++)
+                {
+                    for (int j = i; j < matrix.N; j++)
+                    {
+                        placeHolder[i, j] = resultadoNumExp[i, j];
+                    }
+                }
+
+                sw.Stop();
+
+                var elapsed = sw.Elapsed.TotalSeconds;
+
+                times.Add(elapsed);
+
+                timesSum += elapsed;
+
+                avg = timesSum / (times.Count);
+
+                Console.WriteLine("===============================================================================");
+                Console.WriteLine("Potencia " + (potencia + 2) + " calculada em " + elapsed + " segundos.");
+                Console.WriteLine("Media por potencia: " + avg + " segundos.");
+                Console.WriteLine("Tempo passado: " + total.Elapsed.TotalMinutes + " minutos.");
+                Console.WriteLine("Tempo restante: " + ((avg * (matrix.N - times.Count)) / 60) + " minutos.");
+                Console.WriteLine("===============================================================================");
+            }
+
+            #endregion
+
+
+            //Função objetivo
+            var fo = model.LinearNumExpr();
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    fo.AddTerm(matrix[i, j], X[i, j]);
+                }
+            }
+
+            //Minimize
+            model.AddMinimize(fo);
+
+            Console.WriteLine("\n\n[Solving...]");
+            bool solved = false;
+
+
+            // Solve on a different thread.
+            solved = model.Solve();
+
+            Console.WriteLine("[Solved]\n\n");
+
+            if (!solved)
+            {
+                Console.WriteLine("[No solution]");
+                return;
+            }
+
+            Console.WriteLine("Solution status = " + model.GetStatus());
+            Console.WriteLine("--------------------------------------------");
+            Console.WriteLine();
+            Console.WriteLine("Solution found:");
+            Console.WriteLine(" Objective value = " + model.ObjValue);
+
+            Console.WriteLine();
+            Console.WriteLine("Grafo:");
+            Console.WriteLine(matrix);
+            Console.WriteLine("---------------\n");
+            Console.WriteLine("Arestas escolhidas:");
+            Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
+
+            Console.WriteLine("---------------\n");
+            Console.WriteLine("X ^ " + (matrix.N) + ":\n");
+            Console.WriteLine("[num]");
+            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+            var resultadoDouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    Xdouble[i, j] = model.GetValue(X[i, j]);
+                }
+            }
+
+
+            //var aux = new MatrizAdjacenciaSimetrica<double>(matriz.N);
+
+            //for (int count = 0; count < matriz.N - 1; count++)
+            //{
+            //    for (int i = 0; i < matriz.N; i++)
+            //    {
+            //        for (int j = 0; j < matriz.N; j++)
+            //        {
+            //            double sum = 0;
+            //            for (int k = 0; k < matriz.N; k++)
+            //            {
+            //                if (count == 0)
+            //                {
+            //                    sum = sum + Xdouble[i, k] * Xdouble[k, j];
+            //                }
+            //                else
+            //                {
+            //                    sum = sum + Xdouble[i, k] * aux[k, j];
+            //                }
+            //            }
+
+            //            resultadoDouble[i, j] = sum;
+            //        }
+            //    }
+
+            //    // Copy result to aux.
+            //    for (int i = 0; i < matriz.N; i++)
+            //    {
+            //        for (int j = i; j < matriz.N; j++)
+            //        {
+            //            aux[i, j] = resultadoDouble[i, j];
+            //        }
+            //    }
+
+            //}
+
+            //Console.Write(aux);
+
+            Console.WriteLine("\n[cplex]");
+            Console.Write(resultadoNumExp.ToString((t) => model.GetValue(t).ToString()));
+            Console.WriteLine("---------------\n");
+            Console.WriteLine();
+
+            PlotPath(Xdouble, points);
+        }
+
+        /// <summary>
+        /// Calculates the euclidian distance between two points.
+        /// </summary>
+        /// <param name="p1">Point 1.</param>
+        /// <param name="p2">Point 2.</param>
+        /// <returns>The distance between p1 and p2.</returns>
+        static double Distance(PointF p1, PointF p2)
+        {
+            return Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
+        }
+
     }
 }
