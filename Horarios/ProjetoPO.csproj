@@ -55,7 +55,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="GraphPlotter">
-      <HintPath>..\..\Documents\Visual Studio 2015\Projects\PlotGraph\GraphPlotter\bin\Debug\GraphPlotter.dll</HintPath>
+      <HintPath>..\lib\GraphPlotter.dll</HintPath>
     </Reference>
     <Reference Include="ILOG.Concert">
       <HintPath>..\lib\ILOG.Concert.dll</HintPath>
