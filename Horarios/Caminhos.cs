@@ -160,23 +160,22 @@ namespace ProjetoPO
             // there is a connection between the points 'i' and 'j'.
             var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
-            // Fill upper row and main diagonal with bool vars.
             for (int i = 0; i < matrix.N; i++)
             {
                 for (int j = i; j < matrix.N; j++)
                 {
                     X[i, j] = model.BoolVar();
                 }
+
             }
 
 
-            // Limits the number of connections
-            // a point can have to 2.
+            // Forces every vertex to connect to
+            // another one.
             for (int i = 0; i < X.N; i++)
             {
                 var exp = model.LinearNumExpr();
 
-                // Columns...
                 for (int j = 0; j < X.N; j++)
                 {
                     if (i != j)
@@ -185,22 +184,10 @@ namespace ProjetoPO
                     }
                 }
 
+
+                // Each vertex must connect to another one.
                 model.AddEq(exp, 2.0);
-
-            }
-
-            // Force main diagonal to be 1.
-            // (used to calculate pow of X).
-            {
-                var exp = model.LinearNumExpr();
-                for (int i = 0; i < matrix.N; i++)
-                {
-                    exp.AddTerm(1.0, X[i, i]);
-                }
-                model.AddEq(exp, matrix.N);
-            }
-
-            
+            }            
 
 
             //Função objetivo
@@ -245,10 +232,8 @@ namespace ProjetoPO
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
 
             Console.WriteLine("---------------\n");
-            Console.WriteLine("X ^ " + (matrix.N) + ":\n");
-            Console.WriteLine("[num]");
+
             var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
-            var resultadoDouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
@@ -258,10 +243,18 @@ namespace ProjetoPO
                 }
             }
 
-            Console.WriteLine("---------------\n");
-            Console.WriteLine();
-
             PlotPath(Xdouble, points);
+        }
+
+        static void FindTours(MatrizAdjacenciaSimetrica<double> matrix)
+        {
+            var vertex = new List<int>(matrix.N);
+
+            // Traverse every vertex.
+            for (int i = 0; i < matrix.N; i++)
+            {
+                //var dest = 
+            }
         }
 
         /// <summary>
