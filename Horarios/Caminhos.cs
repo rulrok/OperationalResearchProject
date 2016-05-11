@@ -230,7 +230,6 @@ namespace ProjetoPO
             Console.WriteLine("---------------\n");
             Console.WriteLine("Arestas escolhidas:");
             Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
-
             Console.WriteLine("---------------\n");
 
             var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
@@ -244,32 +243,155 @@ namespace ProjetoPO
             }
 
             PlotPath(Xdouble, points);
+
+            while (!FindTours(Xdouble, model, X))
+            {
+                // Keep on solving.
+                model.Solve();
+
+                Console.WriteLine("---------------\n");
+                Console.WriteLine("Arestas escolhidas:");
+                Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));
+                Console.WriteLine("---------------\n");
+
+                PlotPath(Xdouble, points);
+            };
         }
 
-        static void FindTours(MatrizAdjacenciaSimetrica<double> matrix)
+        static bool FindTours(MatrizAdjacenciaSimetrica<double> matrix, Cplex model, MatrizAdjacenciaSimetrica<INumVar> X)
         {
-            var vertex = new List<int>(matrix.N);
-
             var visited = new bool[matrix.N];
-            dfs(matrix, 0, visited);
 
-            // Traverse every vertex.
-            for (int i = 0; i < matrix.N; i++)
+            // ta porco mas funciona.
+            // cada vez que roda, o dfs
+            // coloca 1 subtour na lista
+            // "vertexesInCycle", onde
+            // [0] => [1] => ... => [n]
+            // e, no ciclo, [n] => [0].
+
+            do {
+
+                // where next cycle starts at.
+                var firstNotVisited = Array.IndexOf(visited, false);
+
+                // reset steps because we won't visit again
+                // whomever was already visited.
+                var visitedInCycle = new bool[matrix.N];
+
+                var vertexesInCycle = new List<int>(matrix.N);
+
+                dfs(matrix, firstNotVisited, firstNotVisited, visitedInCycle, vertexesInCycle);
+
+                /////////////////////////////////
+                // Add restriction based on    //
+                // vertexes in vertexesInCycle //
+                /////////////////////////////////
+
+                if (vertexesInCycle.Count == matrix.N)
+                {
+                    // OPTIMAL SOLUTION FOUND.
+                    return true;
+                }
+                else
+                {
+                    var exp = model.LinearNumExpr();
+
+                    for (int i = 0; i < vertexesInCycle.Count - 1; i++)
+                    {
+                        exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[i + 1]]);
+                        exp.AddTerm(1.0, X[vertexesInCycle[i + 1], vertexesInCycle[i]]);
+                    }
+
+                    exp.AddTerm(1.0, X[vertexesInCycle.Last(), vertexesInCycle.First()]);
+
+                    exp.AddTerm(1.0, X[vertexesInCycle.First(), vertexesInCycle.Last()]);
+
+                    model.AddLe(vertexesInCycle.Count - 1, exp);
+
+                    // Agora falta descobrir como da um "re-solve".
+                }
+
+                for (int i = 0; i < visitedInCycle.Length; i++)
+                {
+                    if (visitedInCycle[i])
+                    {
+                        visited[i] = true;
+                    }
+                }
+
+            } while (visited.Where(v => v == true).Count() < visited.Length);
+
+            return false;
+        }
+
+        static void dfs(MatrizAdjacenciaSimetrica<double> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
+        {
+            if (!visited[current])
             {
-                dfs(matrix, i, visited);
+                visited[current] = true;
+            }
+            else
+            {
+                var visitedVertexes = new List<int>(visited.Length);
+                int steps = 0;
+
+                for (int i = 0; i < visited.Length; i++)
+                {
+                    if (visited[i])
+                    {
+                        steps++;
+                        visitedVertexes.Add(i);
+                    }
+                }
+
+                //Console.WriteLine("[" + (current + 1) + "]: came from " + (src + 1) + ".");
+                Console.WriteLine("Cycle closed in " + steps + " steps.");
+
+                if (steps < matrix.N)
+                {
+                    Console.Write("Cycle is a subtour with path { ");
+
+                    var path = "";
+                    visitedVertexes.ForEach(i => { path += (i + 1) + " => "; vertexesInCycle.Add(i); });
+                    path = path.Substring(0, path.Length - 4);
+
+                    Console.WriteLine(path + " }.");
+                }
+
+                //visitedVertexes.ForEach(i => visited[i] = false);
+
+                return;
             }
 
-        }
-
-        static void dfs(MatrizAdjacenciaSimetrica<double> matrix, int node, bool[] visited)
-        {
-            visited[node] = true;
+            //Console.WriteLine("[" + (current + 1) + "]: came from " + (src + 1) + ".");
 
             for (int j = 0; j < matrix.N; j++)
             {
-                if (!visited[j] && matrix[node, j] > 0)
+                //Console.WriteLine("[" + (current + 1) + "]: trying to go to " + (j + 1) + ".");
+
+                // Discard going straight back
+                // from where we came.
+                if (j == src)
                 {
-                    dfs(matrix, j, visited);
+                    //Console.WriteLine("[" + (current + 1) + "]: cannot go straight back.");
+                    continue;
+                }
+
+
+                if (matrix[current, j] > 0)
+                {
+                    //Console.WriteLine("[" + (current + 1) + "]: there is a path to " + (j + 1) + ".");
+
+                    //var foundCycle = visited[j];
+
+                    // Finish cycle.
+                    dfs(matrix, current, j, visited, vertexesInCycle);
+
+                    if (visited[j]) return;
+                }
+                else
+                {
+                    //Console.WriteLine("[" + (current + 1) + "]: there is NO path to " + (j + 1) + ".");
                 }
             }
         }
