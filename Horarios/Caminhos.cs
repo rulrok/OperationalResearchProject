@@ -22,7 +22,7 @@ namespace ProjetoPO
     using System.Drawing;
     using static Plotter.GraphPlotter;
     using Vertex = Int32;
-
+    using System.Globalization;
     class MatrizAdjacenciaSimetrica<T>
     {
         T[] matrizLinear;
@@ -187,7 +187,7 @@ namespace ProjetoPO
 
                 // Each vertex must connect to another one.
                 model.AddEq(exp, 2.0);
-            }            
+            }
 
 
             //Função objetivo
@@ -250,10 +250,27 @@ namespace ProjetoPO
         {
             var vertex = new List<int>(matrix.N);
 
+            var visited = new bool[matrix.N];
+            dfs(matrix, 0, visited);
+
             // Traverse every vertex.
             for (int i = 0; i < matrix.N; i++)
             {
-                //var dest = 
+                dfs(matrix, i, visited);
+            }
+
+        }
+
+        static void dfs(MatrizAdjacenciaSimetrica<double> matrix, int node, bool[] visited)
+        {
+            visited[node] = true;
+
+            for (int j = 0; j < matrix.N; j++)
+            {
+                if (!visited[j] && matrix[node, j] > 0)
+                {
+                    dfs(matrix, j, visited);
+                }
             }
         }
 
@@ -267,13 +284,16 @@ namespace ProjetoPO
         {
 
             var lines = File.ReadAllLines(filePath);
-            var chartPoints = new List<PointF>(lines.Length - 1);
+            var chartPoints = new List<PointF>(int.Parse(lines[0]));
 
 
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 1; i < lines.Length && i < chartPoints.Capacity; i++)
             {
                 var xy = lines[i].Split(' ');
-                chartPoints.Add(new PointF { X = float.Parse(xy[0]), Y = float.Parse(xy[1]) });
+                var X = float.Parse(xy[0], CultureInfo.InvariantCulture.NumberFormat);
+                var Y = float.Parse(xy[1], CultureInfo.InvariantCulture.NumberFormat);
+                var point = new PointF{ X = X, Y = Y};
+                chartPoints.Add(point);
             }
 
 
