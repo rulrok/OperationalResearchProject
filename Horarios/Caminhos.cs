@@ -127,19 +127,17 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) != "gr137")
+                if (Path.GetFileNameWithoutExtension(file) == "gr137")
                 {
-                    continue;
+                    if (args.Length > 0
+                        && args[0] == "-it")
+                    {
+                        Solve(file, outputIterations: true);
+
+                    }
+
+                    Solve(file, outputIterations: false);
                 }
-
-                if (args.Length > 0
-                    && args[0] == "-it")
-                {
-                    Solve(file, outputIterations: true);
-
-                }
-
-                Solve(file, outputIterations: false);
 
             }
 
