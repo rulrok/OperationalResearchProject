@@ -9,6 +9,12 @@ using System.Web.UI.DataVisualization.Charting;
 
 namespace Plotter
 {
+    public struct PointD
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
     public static class GraphPlotter
     {
 
@@ -18,21 +24,21 @@ namespace Plotter
             public List<int> ConnectingVertexesIndexes { get; set; }
         }
 
-        static double Distance(PointF p1, PointF p2)
+        static double Distance(PointD p1, PointD p2)
         {
             return Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
         }
 
-        static PointF Middle(PointF p1, PointF p2)
+        static PointD Middle(PointD p1, PointD p2)
         {
-            return new PointF
+            return new PointD
             {
                 X = (p1.X + p2.X) / 2,
                 Y = (p1.Y + p2.Y) / 2
             };
         }
 
-        public static Bitmap Plot(List<PointF> points, List<Edge> edges, int width = 500, int height = 500)
+        public static Bitmap Plot(List<PointD> points, List<Edge> edges, int width = 500, int height = 500)
         {
 
             var area = new ChartArea();
@@ -88,25 +94,25 @@ namespace Plotter
                 // Add point.
                 pointSeries.Points.AddXY(p.X, p.Y);
 
-                //chart.Annotations.Add(
-                //    new CalloutAnnotation
-                //    {
-                //        AxisX = area.AxisX,
-                //        AxisY = area.AxisY,
-                //        X = p.X /*- 0.27*/,
-                //        Y = p.Y /*+ 0.32*/,
-                //        Text = (i + 1).ToString(),
-                //        Font = font,
-                //        CalloutStyle = CalloutStyle.Ellipse,
-                //        Height = 1,
-                //        Width = 1,
-                //        BackColor = Color.LimeGreen,
-                //        BackSecondaryColor = Color.ForestGreen,
-                //        ForeColor = Color.White,
-                //        LineColor = Color.Green,
-                //        BackGradientStyle = GradientStyle.Center
-                //    }
-                //);
+                chart.Annotations.Add(
+                    new CalloutAnnotation
+                    {
+                        AxisX = area.AxisX,
+                        AxisY = area.AxisY,
+                        X = p.X /*- 0.27*/,
+                        Y = p.Y /*+ 0.32*/,
+                        Text = (i).ToString(),
+                        Font = font,
+                        CalloutStyle = CalloutStyle.Ellipse,
+                        Height = 1,
+                        Width = 1,
+                        BackColor = Color.LimeGreen,
+                        BackSecondaryColor = Color.ForestGreen,
+                        ForeColor = Color.White,
+                        LineColor = Color.Green,
+                        BackGradientStyle = GradientStyle.Center
+                    }
+                );
 
                 if (i < edges.Count)
                 {
