@@ -132,7 +132,15 @@ namespace ProjetoPO
                     continue;
                 }
 
-                Solve(file);
+                if (args.Length > 0
+                    && args[0] == "-it")
+                {
+                    Solve(file, outputIterations: true);
+
+                }
+
+                Solve(file, outputIterations: false);
+
             }
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
@@ -140,7 +148,7 @@ namespace ProjetoPO
 
         }
 
-        private static void Solve(string filePath)
+        private static void Solve(string filePath, bool outputIterations)
         {
             // Transform points from file to actual PointD
             // instances that can be used to plot the chart.
@@ -262,6 +270,7 @@ namespace ProjetoPO
                     return;
                 }
 
+                // Update matrix of connections.
                 for (int i = 0; i < matrix.N; i++)
                 {
                     for (int j = i; j < matrix.N; j++)
@@ -270,15 +279,20 @@ namespace ProjetoPO
                     }
                 }
 
-                //nameIdx++;
-                //PlotPath(Xdouble, points, name + nameIdx);
+                if (outputIterations)
+                {
+                    PlotPath(Xdouble, points, name + nameIdx);
+                    nameIdx++;
+                }
             };
 
             sw.Stop();
-            Console.WriteLine("Took: " + sw.Elapsed.TotalSeconds + " seconds.");
+            Console.WriteLine("It took: " + sw.Elapsed.TotalSeconds + " seconds to solve.");
 
-
-            PlotPath(Xdouble, points, name + nameIdx);
+            if (!outputIterations)
+            {
+                PlotPath(Xdouble, points, name + nameIdx);
+            }
         }
 
 
@@ -288,11 +302,15 @@ namespace ProjetoPO
             // the algorithm visited in all iterations.
             var visited = new bool[matrix.N];
 
+            // We must traverse the graph
+            // at least once, so do-while
+            // is better suited.
             do {
 
                 // First we find the first vertex was not visited
                 // so we know where to start from.
-                // This way the algorithm won't revist nodes.
+                // This way the algorithm won't revist nodes
+                // and will potentially find new tours.
                 var firstNotVisited = Array.IndexOf(visited, false);
 
                 // This holds the vertex that were visited
@@ -300,7 +318,9 @@ namespace ProjetoPO
                 var visitedInCycle = new bool[matrix.N];
 
                 // This holds the vertex present in a
-                // cycle in order.
+                // cycle in order so that we know the
+                // path, which we can't infer only from
+                // the ones that were visited.
                 var vertexesInCycle = new List<int>(matrix.N);
 
                 dfs(matrix, firstNotVisited, firstNotVisited, visitedInCycle, vertexesInCycle);
@@ -310,13 +330,47 @@ namespace ProjetoPO
                 // vertexes in vertexesInCycle //
                 /////////////////////////////////
 
-                if (vertexesInCycle.Count == matrix.N)
+                if (vertexesInCycle.Count != matrix.N)
                 {
-                    // OPTIMAL SOLUTION FOUND.
+                    var exp = model.LinearNumExpr();
+
+                    int i = 0;
+                    for (; i < vertexesInCycle.Count - 1; i++)
+                    {
+                        // Connects each vertex to the next in the list.
+                        // Assuming vertexesInCyle equals
+                        // [a, b, c, d], then the expression
+                        // will be of the form
+                        // X[a,b] + X[b,c] + X[c,d] + X[d,a] <= vertexsInCycle.Count.
+                        exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[i + 1]]);
+                    }
+
+                    // Connects the last to the first,
+                    // which adds the "... + X[d,a]" in the expression.
+                    exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[0]]);
+
+                    model.AddLe(exp, vertexesInCycle.Count - 1);
+                }
+                else
+                {
+                    // Then our cycle contains all the vertexes
+                    // which means
+                    // OPTIMAL SOLUTION WAS FOUND.
+
+                    //return true;
+
+                    // Logs the vertexes connections
+                    // in the format 'x => y' in 
+                    // ascending order.
                     var file = new StreamWriter(File.OpenWrite("saida.tsp"));
+
+                    var sb = new StringBuilder(vertexesInCycle.Count * 5);
 
                     for (int i = 0; i < matrix.N; i++)
                     {
+                        sb.Append(vertexesInCycle[i]);
+                        sb.Append(" => ");
+
                         var idx = vertexesInCycle.IndexOf(i);
 
                         if (idx < matrix.N - 1)
@@ -329,30 +383,12 @@ namespace ProjetoPO
                         }
                     }
 
+                    sb.Append(vertexesInCycle[0]);
+                    file.WriteLine(sb.ToString());
+
                     file.Close();
 
                     return true;
-                }
-                else
-                {
-                    var exp = model.LinearNumExpr();
-
-                    for (int i = 0; i < vertexesInCycle.Count; i++)
-                    {
-                        if (i < vertexesInCycle.Count - 1)
-                        {
-                            //Console.Write("(" + (vertexesInCycle[i] + 1) + "," + (vertexesInCycle[i + 1] + 1) + ") + ");
-                            exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[i + 1]]);
-                        }
-                        else
-                        {
-                            //Console.WriteLine("(" + (vertexesInCycle[i] + 1) + "," + (vertexesInCycle[0] + 1) + ") <= " + (vertexesInCycle.Count - 1) + ";");
-                            // Connect the last to the first.
-                            exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[0]]);
-                        }
-                    }
-
-                    model.AddLe(exp, vertexesInCycle.Count - 1);
 
                 }
 
@@ -364,8 +400,13 @@ namespace ProjetoPO
                     }
                 }
 
+                // Traverse until the algorithm visited
+                // all vertexes in the graph.
             } while (visited.Where(v => v == true).Count() < visited.Length);
 
+
+            // The algorithm visited all vertex no cycle
+            // cycle containing all of them was found.
             return false;
         }
 
@@ -379,63 +420,38 @@ namespace ProjetoPO
         /// <param name="vertexesInCycle">Vertexes present in the cycle, in order.</param>
         static void dfs(MatrizAdjacenciaSimetrica<double> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
         {
-            if (!visited[current])
-            {
-                visited[current] = true;
+            // Mark that the vertex was visited.
+            visited[current] = true;
 
-                // current vertex is in the cycle.
-                vertexesInCycle.Add(current);
-            }
-            else
-            {
-
-                //Console.WriteLine("[" + (current + 1) + "]: came from " + (src + 1) + ".");
-                //Console.WriteLine("Cycle closed in " + steps + " steps.");
-
-                //if (vertexesInCycle.Count < matrix.N)
-                //{
-                //    Console.Write("Cycle is a subtour with path { ");
-
-                //    var path = "";
-                //    vertexesInCycle.ForEach(i => path += (i + 1) + " => ");
-                //    path += vertexesInCycle[0];
-
-                //    Console.WriteLine(path + " }.");
-                //}
-
-                return;
-            }
-
-            //Console.WriteLine("[" + (current + 1) + "]: came from " + (src + 1) + ".");
+            // Add the node to the list of vertexes
+            // in the cycle.
+            vertexesInCycle.Add(current);
 
             for (int j = 0; j < matrix.N; j++)
             {
-                //Console.WriteLine("[" + (current + 1) + "]: trying to go to " + (j + 1) + ".");
-
-                // Discard going straight back
-                // from where we came.
-                if (j == src)
+                if (j != src &&
+                    matrix[current, j] > 0)
                 {
-                    //Console.WriteLine("[" + (current + 1) + "]: cannot go straight back.");
-                    continue;
-                }
+                    if (!visited[j])
+                    {
+                        // Keep going.
+                        dfs(matrix, current, j, visited, vertexesInCycle);
+                    }
 
-
-                if (matrix[current, j] > 0)
-                {
-                    //Console.WriteLine("[" + (current + 1) + "]: there is a path to " + (j + 1) + ".");
-
-                    //var foundCycle = visited[j];
-
-                    // Finish cycle.
-                    dfs(matrix, current, j, visited, vertexesInCycle);
-
-                    //if (visited[j]) return;
+                    // Two ways to get here:
+                    //
+                    // 1 - 'j' was already visited.
+                    // In this case, we are going back to a node already visited.
+                    // This means 'current' is the last vertex of a cycle
+                    // and connects to the origin.
+                    // No need to further walk the graph because each vertex
+                    // connect to only one other.
+                    //
+                    // 2 - the call to dfs returned.
+                    // In this case, we visited the only 'current'
+                    // could be connected to. Again, no need
+                    // to further walk the graph.
                     return;
-                }
-                else
-                {
-                    //Console.WriteLine("[" + (current + 1) + "]: there is NO path to " + (j + 1) + ".");
                 }
             }
         }

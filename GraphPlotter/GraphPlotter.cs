@@ -81,10 +81,11 @@ namespace Plotter
             var pointSeries = new Series("points");
             pointSeries.ChartType = SeriesChartType.Point;
             pointSeries.Color = Color.FromArgb(13, 95, 13);
-            pointSeries.MarkerSize = 22;
+            pointSeries.MarkerSize = 1;
 
             var font = new Font("arial", 14);
             double weight = 0;
+            double annotationSizeModifier = 1;
 
             // -1 because the last point has no edges.
             for (int i = 0; i < points.Count; i++)
@@ -94,18 +95,30 @@ namespace Plotter
                 // Add point.
                 pointSeries.Points.AddXY(p.X, p.Y);
 
+                if (i > 99)
+                {
+                    annotationSizeModifier = 1.25;
+                }
+                else
+                {
+                    if (i > 999)
+                    {
+                        annotationSizeModifier = 1.5;
+                    }
+                }
+
                 chart.Annotations.Add(
                     new CalloutAnnotation
                     {
                         AxisX = area.AxisX,
                         AxisY = area.AxisY,
-                        X = p.X /*- 0.27*/,
-                        Y = p.Y /*+ 0.32*/,
+                        X = p.X - 0.35,
+                        Y = p.Y + 0.7,
                         Text = (i).ToString(),
                         Font = font,
                         CalloutStyle = CalloutStyle.Ellipse,
-                        Height = 1,
-                        Width = 1,
+                        Height = 1 * annotationSizeModifier,
+                        Width = 0.5 * annotationSizeModifier,
                         BackColor = Color.LimeGreen,
                         BackSecondaryColor = Color.ForestGreen,
                         ForeColor = Color.White,
