@@ -127,18 +127,20 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) == "gr137")
+                if (Path.GetFileNameWithoutExtension(file) != "gr137")
                 {
-                    if (args.Length > 0
-                        && args[0] == "-it")
-                    {
-                        Solve(file, outputIterations: true);
-
-                    }
-
-                    Solve(file, outputIterations: false);
+                    continue;
                 }
 
+                if (args.Length > 0
+                        && args[0] == "-it")
+                {
+                    Solve(file, outputIterations: true);
+
+                }
+                else {
+                    Solve(file, outputIterations: false);
+                }
             }
 
             Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
