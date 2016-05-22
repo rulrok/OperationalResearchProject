@@ -111,9 +111,15 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="distribuicao\C101.txt" />
-    <Content Include="distribuicao\R101.txt" />
-    <Content Include="distribuicao\RC101.txt" />
+    <Content Include="distribuicao\C101.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="distribuicao\R101.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="distribuicao\RC101.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="grafos\gr137.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
