@@ -113,8 +113,39 @@ namespace ProjetoPO
 
     }
 
+    class Callback : Cplex.LazyConstraintCallback
+    {
+        MatrizAdjacenciaSimetrica<double> Xdouble;
+        MatrizAdjacenciaSimetrica<INumVar> X;
+
+        public Callback()
+        {
+            Xdouble = new MatrizAdjacenciaSimetrica<double>(Caminhos.X.N);
+        }
+
+        public override void Main()
+        {
+            Console.WriteLine("Found a solution.\nLet's reduce subtours.");
+
+            // Update matrix of connections.
+            for (int i = 0; i < Caminhos.X.N; i++)
+            {
+                for (int j = i; j < Caminhos.X.N; j++)
+                {
+                    Xdouble[i, j] = GetValue(Caminhos.X[i, j]);
+                }
+            }
+
+            // Add subtours constraints.
+            Caminhos.FindTours(Xdouble, Caminhos.model, Caminhos.X);
+        }
+    }
+
     class Caminhos
     {
+        public static Cplex model;
+        public static MatrizAdjacenciaSimetrica<INumVar> X;
+
         public static void Main(string[] args)
         {
 
@@ -162,11 +193,11 @@ namespace ProjetoPO
                 Console.WriteLine(matrix);
             }
 
-            Cplex model = new Cplex();
+            model = new Cplex();
 
             // Each [i,j] is a bool var indicating whether
             // there is a connection between the points 'i' and 'j'.
-            var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+            X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
@@ -212,14 +243,24 @@ namespace ProjetoPO
 
             Console.WriteLine("[Solving...]");
 
-            model.SetOut(TextWriter.Null);
+            model.Use(new Callback());
+
+            //model.SetOut(TextWriter.Null);
             var solved = model.Solve();
 
             Console.WriteLine("[Solved]");
 
+            //while (!solved)
+            //{
+            //    model.Solve();
+            //}
+
             if (!solved)
             {
                 Console.WriteLine("[No solution]\n");
+
+                Console.WriteLine(model.GetStatus());
+
                 return;
             }
 
@@ -230,7 +271,7 @@ namespace ProjetoPO
 
             if (X.N < 40)
             {
-                Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));    
+                Console.Write(X.ToString((nv) => model.GetValue(nv).ToString()));   
             }
             else
             {
@@ -293,10 +334,12 @@ namespace ProjetoPO
             {
                 PlotPath(Xdouble, points, name + nameIdx);
             }
+
+            model.End();
         }
 
 
-        static bool FindTours(MatrizAdjacenciaSimetrica<double> matrix, Cplex model, MatrizAdjacenciaSimetrica<INumVar> X)
+        public static bool FindTours(MatrizAdjacenciaSimetrica<double> matrix, Cplex model, MatrizAdjacenciaSimetrica<INumVar> X)
         {
             // Stores which vertexes in the graph
             // the algorithm visited in all iterations.
@@ -342,13 +385,16 @@ namespace ProjetoPO
                         // [a, b, c, d], then the expression
                         // will be of the form
                         // X[a,b] + X[b,c] + X[c,d] + X[d,a] <= vertexsInCycle.Count.
+                        Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[i + 1] + ")");
                         exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[i + 1]]);
                     }
 
                     // Connects the last to the first,
                     // which adds the "... + X[d,a]" in the expression.
                     exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[0]]);
+                    Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
 
+                    Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
                     model.AddLe(exp, vertexesInCycle.Count - 1);
                 }
                 else
@@ -561,3 +607,17 @@ namespace ProjetoPO
 
     }
 }
+
+/*
+
+vehicle number -> maximo de veiculos que pode usar
+
+capacity -> capacidade do veiculo
+somatorio de carga em um carro nao pode passar esse limit.
+
+linha 0 indica da onde os carros saem.
+<id cliente> <coord x> <coord y> <demanda de cada consumidor> <ignorar o resto>
+
+
+clientes espalhados no cartesiano e os veiculos entregam as cargas.
+*/
