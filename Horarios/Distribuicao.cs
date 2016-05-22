@@ -48,8 +48,6 @@ namespace ProjetoPO
         private static void Solve(string filePath)
         {
             var customers = ReadFile(filePath);
-
-            var points = ReadPoints(filePath);
             var matrix = AssembleMatrix(customers);
 
             var model = new Cplex();
