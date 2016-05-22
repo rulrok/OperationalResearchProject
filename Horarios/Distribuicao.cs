@@ -47,7 +47,8 @@ namespace ProjetoPO
 
         private static void Solve(string filePath)
         {
-            var customers = ReadFile(filePath);
+            int vehicleNumber, capacity;
+            var customers = ReadFile(filePath, out vehicleNumber, out capacity);
             var matrix = AssembleMatrix(customers);
 
             var model = new Cplex();
@@ -100,20 +101,28 @@ namespace ProjetoPO
                 model.AddEq(exp, 2.0);
             }
 
-            // Forces that the depot connect to everyone (not including himself)
+            // Forces that the depot to have 'vehicleNumber' edges departing/arriving.
             {
                 var exp = model.LinearNumExpr();
 
                 for (int j = 1; j < X.N; j++)
                 {
-                    if (j != 0)
-                    {
-                        exp.AddTerm(1.0, X[0, j]);
-                    }
+                    exp.AddTerm(1.0, X[0, j]);
                 }
 
                 // Each vertex must connect to another one.
-                model.AddEq(exp, matrix.N - 1);
+                model.AddEq(exp, vehicleNumber);
+            }
+            {
+                var exp = model.LinearNumExpr();
+
+                for (int i = 1; i < X.N; i++)
+                {
+                    exp.AddTerm(1.0, X[i, 0]);
+                }
+
+                // Each vertex must connect to another one.
+                model.AddEq(exp, vehicleNumber);
             }
 
             //----------------------------------------------------------------------------
@@ -153,10 +162,9 @@ namespace ProjetoPO
             Console.WriteLine("---------------");
         }
 
-        private static List<Customer> ReadFile(string filePath)
+        private static List<Customer> ReadFile(string filePath, out int vehicleNumber, out int capacity)
         {
-            var customers = new List<Customer>();
-            int vehicleNumber, capacity;
+            var customers = new List<Customer>();            
 
             var lines = File.ReadAllLines(filePath);
 
