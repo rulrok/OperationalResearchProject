@@ -107,8 +107,41 @@ namespace ProjetoPO
                 model.AddEq(exp, matrix.N - 1);
             }
 
+            //----------------------------------------------------------------------------
+            // OBJECTIVE FUNCTION
+            //----------------------------------------------------------------------------
 
-            throw new NotImplementedException();
+            var of = model.LinearNumExpr();
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    of.AddTerm(matrix[i, j], X[i, j]);
+                }
+            }
+
+            //Minimize
+            model.AddMinimize(of);
+
+            Console.WriteLine("[Solving...]");
+
+            var solved = model.Solve();
+
+            Console.WriteLine("[Solved]");
+
+            if (!solved)
+            {
+                Console.WriteLine("[No solution]\n");
+
+                Console.WriteLine(model.GetStatus());
+
+                return;
+            }
+
+            Console.WriteLine("Solution status: " + model.GetStatus());
+            Console.WriteLine("Objective value: " + model.ObjValue);
+            Console.WriteLine("\nBinary Graph:");
+            Console.WriteLine("---------------");
         }
 
         public List<PointD> ReadFile(string filePath)
