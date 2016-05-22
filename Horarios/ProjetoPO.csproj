@@ -93,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Caminhos.cs" />
+    <Compile Include="Distribuicao.cs" />
     <Compile Include="Horarios.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="MatrizAdjacenciaSimetrica.cs" />

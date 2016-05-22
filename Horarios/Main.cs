@@ -5,7 +5,8 @@
         static void Main(string[] args)
         {
             //Horarios.Main(args);
-            Caminhos.Main(args);
+            //Caminhos.Main(args);
+            Distribuicao.Main(args);
         }
     }
 }
