@@ -10,6 +10,15 @@ using Plotter;
 
 namespace ProjetoPO
 {
+    struct Customer
+    {
+        public int Id { get; set; }
+
+        public PointD Coord { get; set; }
+        
+        public int Demand { get; set; }
+    }
+
     class Distribuicao
     {
         public static void Main(string[] args)
@@ -37,8 +46,9 @@ namespace ProjetoPO
 
         private static void Solve(string filePath)
         {
-            var points = ReadPoints(filePath);
+            var customers = ReadFile(filePath);
 
+            var points = ReadPoints(filePath);
             var matrix = AssembleMatrix(points);
 
             var model = new Cplex();
@@ -72,16 +82,34 @@ namespace ProjetoPO
             throw new NotImplementedException();
         }
 
-        public List<PointD> ReadFile(string filePath)
+        private static List<Customer> ReadFile(string filePath)
         {
+            var customers = new List<Customer>();
             int vehicleNumber, capacity;
 
             var lines = File.ReadAllLines(filePath);
 
-            var @params = lines[4].Split('\t');
+            var @params = lines[4].Split(new string[] { " " }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             vehicleNumber = int.Parse(@params[0]);
             capacity = int.Parse(@params[1]);
+
+            // Cols:
+            // Customer Id, X, Y, Demand
+            for (int i = 9; i < lines.Length; i++)
+            {
+                var c = lines[i].Split(new string[] { " " }, 5, StringSplitOptions.RemoveEmptyEntries);
+
+                customers.Add(new Customer {
+
+                    Id = int.Parse(c[0]),
+                    Coord = new PointD { X = double.Parse(c[1]), Y = double.Parse(c[2]) },
+                    Demand = int.Parse(c[3])
+
+                });
+            }
+
+            return customers;
         }
 
         static List<PointD> ReadPoints(string filePath)
