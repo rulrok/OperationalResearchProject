@@ -104,7 +104,7 @@ namespace ProjetoPO
                 }
 
                 // Each vertex must connect to another one.
-                model.AddEq(exp, matrix.N);
+                model.AddEq(exp, matrix.N - 1);
             }
 
 
