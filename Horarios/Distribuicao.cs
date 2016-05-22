@@ -39,7 +39,7 @@ namespace ProjetoPO
                 Solve(file);
             }
 
-            Console.WriteLine("Pressione qualquer tecla para encerrar o programa");
+            Console.WriteLine("Press any key to close the program...");
             Console.ReadKey(true);
 
         }
@@ -54,7 +54,7 @@ namespace ProjetoPO
             var model = new Cplex();
 
             //
-            // Cria variável de decisão X
+            // Create decision variable Y
             var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
@@ -67,7 +67,7 @@ namespace ProjetoPO
             }
 
             //
-            // Cria variável de decisão Y
+            // Create decision variable Y
             var Y = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
@@ -78,6 +78,45 @@ namespace ProjetoPO
                 }
 
             }
+
+            //----------------------------------------------------------------------------
+            // RESTRICTIONS
+            //----------------------------------------------------------------------------
+
+
+            // Forces every vertex execept the zeroth to connect to another one.    
+            for (int i = 1; i < X.N; i++)
+            {
+                var exp = model.LinearNumExpr();
+
+                for (int j = 0; j < X.N; j++)
+                {
+                    if (i != j)
+                    {
+                        exp.AddTerm(1.0, X[i, j]);
+                    }
+                }
+
+                // Each vertex must connect to another one.
+                model.AddEq(exp, 2.0);
+            }
+
+            // Forces that the depot connect to everyone (not including himself)
+            {
+                var exp = model.LinearNumExpr();
+
+                for (int j = 1; j < X.N; j++)
+                {
+                    if (j != 0)
+                    {
+                        exp.AddTerm(1.0, X[0, j]);
+                    }
+                }
+
+                // Each vertex must connect to another one.
+                model.AddEq(exp, matrix.N - 1);
+            }
+
 
             throw new NotImplementedException();
         }
