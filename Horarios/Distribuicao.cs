@@ -23,6 +23,8 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
+                if (Path.GetFileNameWithoutExtension(file) != "RC101")
+                    continue;
 
                 Solve(file);
             }
