@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ILOG.Concert;
 using ILOG.CPLEX;
 using Plotter;
 
@@ -40,6 +41,32 @@ namespace ProjetoPO
 
             var model = new Cplex();
 
+            //
+            // Cria variável de decisão X
+            var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    X[i, j] = model.BoolVar();
+                }
+
+            }
+
+            //
+            // Cria variável de decisão Y
+            var Y = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    X[i, j] = model.BoolVar();
+                }
+
+            }
+
             throw new NotImplementedException();
         }
 
@@ -64,7 +91,7 @@ namespace ProjetoPO
 
         }
 
-        private static object AssembleMatrix(List<PointD> points)
+        private static MatrizAdjacenciaSimetrica<double> AssembleMatrix(List<PointD> points)
         {
             var matrix = new MatrizAdjacenciaSimetrica<double>(points.Count);
 
