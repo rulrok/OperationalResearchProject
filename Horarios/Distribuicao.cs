@@ -111,6 +111,18 @@ namespace ProjetoPO
             throw new NotImplementedException();
         }
 
+        public List<PointD> ReadFile(string filePath)
+        {
+            int vehicleNumber, capacity;
+
+            var lines = File.ReadAllLines(filePath);
+
+            var @params = lines[4].Split('\t');
+
+            vehicleNumber = int.Parse(@params[0]);
+            capacity = int.Parse(@params[1]);
+        }
+
         static List<PointD> ReadPoints(string filePath)
         {
 
@@ -147,9 +159,10 @@ namespace ProjetoPO
             return matrix;
         }
 
-        private static double Distance(PointD pointD1, PointD pointD2)
+        // Distancia euclidiana entre 2 pontos.
+        private static double Distance(PointD p1, PointD p2)
         {
-            throw new NotImplementedException();
+            return Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
         }
     }
 }
