@@ -73,7 +73,7 @@ namespace ProjetoPO
             {
                 for (int j = i; j < matrix.N; j++)
                 {
-                    X[i, j] = model.BoolVar();
+                    Y[i, j] = model.BoolVar();
                 }
 
             }
