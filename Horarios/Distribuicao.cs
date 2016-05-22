@@ -47,11 +47,10 @@ namespace ProjetoPO
 
         private static void Solve(string filePath)
         {
-
             var customers = ReadFile(filePath);
 
             var points = ReadPoints(filePath);
-            var matrix = AssembleMatrix(points);
+            var matrix = AssembleMatrix(customers);
 
             var model = new Cplex();
 
@@ -207,15 +206,15 @@ namespace ProjetoPO
 
         }
 
-        private static MatrizAdjacenciaSimetrica<double> AssembleMatrix(List<PointD> points)
+        private static MatrizAdjacenciaSimetrica<double> AssembleMatrix(List<Customer> customers)
         {
-            var matrix = new MatrizAdjacenciaSimetrica<double>(points.Count);
+            var matrix = new MatrizAdjacenciaSimetrica<double>(customers.Count);
 
             for (int i = 0; i < matrix.N - 1; i++)
             {
                 for (int j = i + 1; j < matrix.N; j++)
                 {
-                    matrix.Set(i, j, Distance(points[i], points[j]));
+                    matrix.Set(i, j, Distance(customers[i].Coord, customers[j].Coord));
                 }
             }
 
