@@ -61,6 +61,8 @@ namespace ProjetoPO
             var customers = ReadFile(filePath, out vehicleNumber, out capacity);
             var matrix = AssembleMatrix(customers);
 
+            vehicleNumber = 2;
+
             model = new Cplex();
 
             //
@@ -122,7 +124,7 @@ namespace ProjetoPO
             {
                 var exp = model.LinearNumExpr();
 
-                for (int j = 0; j < X.N; j++)
+                for (int j = 1; j < X.N; j++)
                 {
                     if (i != j)
                     {
@@ -173,7 +175,7 @@ namespace ProjetoPO
             Console.WriteLine("Objective value: " + model.ObjValue);
             Console.WriteLine("\nBinary Graph:");
             Console.WriteLine("---------------");
-
+            Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
             
 
             //Plotter.GraphPlotter.Plot(customers.Select(p => p.Coord).ToList(), )
