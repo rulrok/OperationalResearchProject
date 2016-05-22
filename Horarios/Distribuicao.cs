@@ -19,8 +19,18 @@ namespace ProjetoPO
         public int Demand { get; set; }
     }
 
-    class Distribuicao
+
+    class Distribuicao : Cplex.LazyConstraintCallback
     {
+        public static Cplex model;
+        public static MatrizAdjacenciaSimetrica<INumVar> X;
+
+        // Callback Main.
+        public override void Main()
+        {
+            // Cut subtours using 3rd party library.
+        }
+
         public static void Main(string[] args)
         {
 
@@ -51,11 +61,11 @@ namespace ProjetoPO
             var customers = ReadFile(filePath, out vehicleNumber, out capacity);
             var matrix = AssembleMatrix(customers);
 
-            var model = new Cplex();
+            model = new Cplex();
 
             //
             // Create decision variable X
-            var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+            X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
@@ -76,13 +86,36 @@ namespace ProjetoPO
                 {
                     Y[i, j] = model.BoolVar();
                 }
-
             }
 
             //----------------------------------------------------------------------------
             // RESTRICTIONS
             //----------------------------------------------------------------------------
 
+
+            // Forces that the depot to have 'vehicleNumber' edges departing/arriving.
+            {
+                var exp = model.LinearNumExpr();
+
+                for (int j = 1; j < X.N; j++)
+                {
+                    exp.AddTerm(1.0, X[0, j]);
+                }
+
+                // Each vertex must connect to another one.
+                model.AddEq(exp, 2 * vehicleNumber);
+            }
+            {
+                var exp = model.LinearNumExpr();
+
+                for (int i = 1; i < X.N; i++)
+                {
+                    exp.AddTerm(1.0, X[i, 0]);
+                }
+
+                // Each vertex must connect to another one.
+                model.AddEq(exp, 2 * vehicleNumber);
+            }
 
             // Forces every vertex execept the zeroth to connect to another one.    
             for (int i = 1; i < X.N; i++)
@@ -101,29 +134,6 @@ namespace ProjetoPO
                 model.AddEq(exp, 2.0);
             }
 
-            // Forces that the depot to have 'vehicleNumber' edges departing/arriving.
-            {
-                var exp = model.LinearNumExpr();
-
-                for (int j = 1; j < X.N; j++)
-                {
-                    exp.AddTerm(1.0, X[0, j]);
-                }
-
-                // Each vertex must connect to another one.
-                model.AddEq(exp, vehicleNumber);
-            }
-            {
-                var exp = model.LinearNumExpr();
-
-                for (int i = 1; i < X.N; i++)
-                {
-                    exp.AddTerm(1.0, X[i, 0]);
-                }
-
-                // Each vertex must connect to another one.
-                model.AddEq(exp, vehicleNumber);
-            }
 
             //----------------------------------------------------------------------------
             // OBJECTIVE FUNCTION
@@ -143,6 +153,9 @@ namespace ProjetoPO
 
             Console.WriteLine("[Solving...]");
 
+            // Use callback to cut subtours.
+            model.Use(new Distribuicao());
+
             var solved = model.Solve();
 
             Console.WriteLine("[Solved]");
@@ -160,6 +173,15 @@ namespace ProjetoPO
             Console.WriteLine("Objective value: " + model.ObjValue);
             Console.WriteLine("\nBinary Graph:");
             Console.WriteLine("---------------");
+
+            
+
+            //Plotter.GraphPlotter.Plot(customers.Select(p => p.Coord).ToList(), )
+        }
+
+        private static void Plot(List<Customer> customers, MatrizAdjacenciaSimetrica<double> edges)
+        {
+
         }
 
         private static List<Customer> ReadFile(string filePath, out int vehicleNumber, out int capacity)
@@ -177,6 +199,8 @@ namespace ProjetoPO
             // Customer Id, X, Y, Demand
             for (int i = 9; i < lines.Length; i++)
             {
+                if (lines[i][0] == '#') continue;
+
                 var c = lines[i].Split(new string[] { " " }, 5, StringSplitOptions.RemoveEmptyEntries);
 
                 customers.Add(new Customer {
@@ -232,5 +256,6 @@ namespace ProjetoPO
         {
             return Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
         }
+
     }
 }
