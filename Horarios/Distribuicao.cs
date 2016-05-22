@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ILOG.Concert;
 using ILOG.CPLEX;
 using Plotter;
+using static Plotter.GraphPlotter;
 
 namespace ProjetoPO
 {
@@ -174,25 +175,64 @@ namespace ProjetoPO
             Console.WriteLine("Solution status: " + model.GetStatus());
             Console.WriteLine("Objective value: " + model.ObjValue);
             Console.WriteLine("\nBinary Graph:");
-            Console.WriteLine("---------------");
+            Console.WriteLine("---------------\n");
+
+            Console.Write("    ");
+            for (int i = 0; i < X.N; i++) Console.Write(i + " ");
+            Console.WriteLine();
+            Console.Write("  +");
+            for (int i = 0; i < X.N; i++) Console.Write("--");
+            Console.WriteLine();
+
             Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
-            
 
-            //Plotter.GraphPlotter.Plot(customers.Select(p => p.Coord).ToList(), )
-        }
+            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
 
-        private static void Plot(List<Customer> customers, MatrizAdjacenciaSimetrica<INumVar> X)
-        {
-            var edges = new MatrizAdjacenciaSimetrica<double>(customers.Count);
-
-            for (int i = 0; i < edges.N; i++)
+            for (int i = 0; i < matrix.N; i++)
             {
-                for (int j = 0; j < edges.N; j++)
+                for (int j = i; j < matrix.N; j++)
                 {
-                    edges[i,j] = 
+                    Xdouble[i, j] = model.GetValue(X[i, j]);
                 }
             }
 
+            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
+        }
+
+        static void PlotPath(MatrizAdjacenciaSimetrica<double> matrix, List<PointD> points, string plotFileName = "VRP")
+        {
+            double weight = 0;
+
+            // Only N - 1 points have edges.
+            // We need not compute the edge of the
+            // lats vertex.
+            var edges = new List<Edge>(points.Count - 1);
+
+            // Assemble edges.
+            for (int i = 0; i < edges.Capacity; i++)
+            {
+                var edge = new Edge() { VertexIndex = i };
+
+                // We can only have 2 edges per vertex.
+                edge.ConnectingVertexesIndexes = new List<int>(2);
+
+                for (int j = i + 1; j < matrix.N; j++)
+                {
+                    // Scan only upper matrix.
+                    if (matrix[i, j] != 0d)
+                    {
+                        edge.ConnectingVertexesIndexes.Add(j);
+                        weight += Distance(points[i], points[j]);
+                    }
+
+                }
+
+                edges.Add(edge);
+            }
+
+            var bmp = Plot(points, edges, 1024 * 5, 768 * 3);
+            bmp.Save(plotFileName + ".png");
+            bmp.Dispose();
         }
 
         private static List<Customer> ReadFile(string filePath, out int vehicleNumber, out int capacity)

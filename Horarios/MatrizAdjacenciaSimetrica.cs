@@ -79,6 +79,8 @@ namespace ProjetoPO
 
             for (int i = 0; i < N; i++)
             {
+                sb.Append(i + " | ");
+
                 for (int j = 0; j < N; j++)
                 {
                     var value = transformer(this[i, j]);
