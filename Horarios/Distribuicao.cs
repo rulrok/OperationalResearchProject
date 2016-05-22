@@ -181,8 +181,17 @@ namespace ProjetoPO
             //Plotter.GraphPlotter.Plot(customers.Select(p => p.Coord).ToList(), )
         }
 
-        private static void Plot(List<Customer> customers, MatrizAdjacenciaSimetrica<double> edges)
+        private static void Plot(List<Customer> customers, MatrizAdjacenciaSimetrica<INumVar> X)
         {
+            var edges = new MatrizAdjacenciaSimetrica<double>(customers.Count);
+
+            for (int i = 0; i < edges.N; i++)
+            {
+                for (int j = 0; j < edges.N; j++)
+                {
+                    edges[i,j] = 
+                }
+            }
 
         }
 
