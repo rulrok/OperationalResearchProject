@@ -53,7 +53,7 @@ namespace ProjetoPO
             var model = new Cplex();
 
             //
-            // Create decision variable Y
+            // Create decision variable X
             var X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
