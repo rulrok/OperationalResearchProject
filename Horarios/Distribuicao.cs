@@ -37,6 +37,7 @@ namespace ProjetoPO
                     continue;
 
                 Solve(file);
+                //test
             }
 
             Console.WriteLine("Press any key to close the program...");
