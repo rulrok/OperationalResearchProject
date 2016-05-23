@@ -16,7 +16,7 @@ namespace ProjetoPO
         public int Id { get; set; }
 
         public PointD Coord { get; set; }
-        
+
         public int Demand { get; set; }
     }
 
@@ -237,7 +237,7 @@ namespace ProjetoPO
 
         private static List<Customer> ReadFile(string filePath, out int vehicleNumber, out int capacity)
         {
-            var customers = new List<Customer>();            
+            var customers = new List<Customer>();
 
             var lines = File.ReadAllLines(filePath);
 
@@ -254,7 +254,8 @@ namespace ProjetoPO
 
                 var c = lines[i].Split(new string[] { " " }, 5, StringSplitOptions.RemoveEmptyEntries);
 
-                customers.Add(new Customer {
+                customers.Add(new Customer
+                {
 
                     Id = int.Parse(c[0]),
                     Coord = new PointD { X = double.Parse(c[1]), Y = double.Parse(c[2]) },
@@ -305,6 +306,12 @@ namespace ProjetoPO
         // Distancia euclidiana entre 2 pontos.
         private static double Distance(PointD p1, PointD p2)
         {
+            if (p1.Equals(p2))
+            {
+                //Generally, the use of the loop arcs, (i, i),is not
+                //allowed and this is imposed by defining en = +inf for all i e V [p. 6]
+                return double.PositiveInfinity;
+            }
             return Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
         }
 

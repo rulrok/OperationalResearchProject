@@ -13,6 +13,29 @@ namespace Plotter
     {
         public double X { get; set; }
         public double Y { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            if (!(obj is PointD))
+            {
+                return false;
+            }
+
+            var point = (PointD)obj;
+
+            return (point.X == this.X && point.Y == this.Y);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                int hash = 17;
+                hash = hash * 23 + X.GetHashCode();
+                hash = hash * 23 + Y.GetHashCode();
+                return hash;
+            }
+        }
     }
 
     public static class GraphPlotter
