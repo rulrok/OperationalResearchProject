@@ -74,6 +74,8 @@ namespace ProjetoPO
             {
                 for (int j = i; j < matrix.N; j++)
                 {
+                    //If single-customer routes are not allowed, all used variables are binary; 
+                    //otherwise, all customers variables are binary and all depot-leaving variables are in {0, 1, 2} set.
                     X[i, j] = model.BoolVar();
                 }
 
@@ -97,6 +99,7 @@ namespace ProjetoPO
 
 
             // Forces that the depot to have 'vehicleNumber' edges departing/arriving.
+            // Equivalent to restriction (1.17) or (1.23) in the book [p. 14]
             {
                 var exp = model.LinearNumExpr();
 
@@ -108,19 +111,21 @@ namespace ProjetoPO
                 // Each vertex must connect to another one.
                 model.AddEq(exp, 2 * vehicleNumber);
             }
-            {
-                var exp = model.LinearNumExpr();
+            // This is not necessary using the undirected model from page 14
+            //{
+            //    var exp = model.LinearNumExpr();
 
-                for (int i = 1; i < X.N; i++)
-                {
-                    exp.AddTerm(1.0, X[i, 0]);
-                }
+            //    for (int i = 1; i < X.N; i++)
+            //    {
+            //        exp.AddTerm(1.0, X[i, 0]);
+            //    }
 
-                // Each vertex must connect to another one.
-                model.AddEq(exp, 2 * vehicleNumber);
-            }
+            //    // Each vertex must connect to another one.
+            //    model.AddEq(exp, 2 * vehicleNumber);
+            //}
 
-            // Forces every vertex execept the zeroth to connect to another one.    
+            // Forces every vertex execept the zeroth to connect to another one.
+            // See restrictions (1.16) and (1.17) or (1.22) and (1.23) in the book [p. 14]
             for (int i = 1; i < X.N; i++)
             {
                 var exp = model.LinearNumExpr();
@@ -142,14 +147,21 @@ namespace ProjetoPO
             // OBJECTIVE FUNCTION
             //----------------------------------------------------------------------------
 
+            // See item (1.15) or (1.21) on page 14 of the book
             var of = model.LinearNumExpr();
-            for (int i = 0; i < matrix.N; i++)
+
+            for (int i = 0; i < matrix.LinearSize; i++)
             {
-                for (int j = i; j < matrix.N; j++)
-                {
-                    of.AddTerm(matrix[i, j], X[i, j]);
-                }
+                //Accessing as linear vector rather than matrix
+                of.AddTerm(matrix[i], X[i]);
             }
+            //for (int i = 1; i < matrix.N; i++)
+            //{
+            //    for (int j = i; j < matrix.N; j++)
+            //    {
+            //        of.AddTerm(matrix[i, j], X[i, j]);
+            //    }
+            //}
 
             //Minimize
             model.AddMinimize(of);

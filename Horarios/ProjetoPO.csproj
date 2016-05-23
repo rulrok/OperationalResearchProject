@@ -54,10 +54,6 @@
     <StartupObject>ProjetoPO.MainClass</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GraphPlotter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GraphPlotter\bin\Debug\GraphPlotter.dll</HintPath>
-    </Reference>
     <Reference Include="ILOG.Concert">
       <HintPath>..\lib\ILOG.Concert.dll</HintPath>
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -154,7 +150,12 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\GraphPlotter\GraphPlotter.csproj">
+      <Project>{3ec2c6fb-70db-4f96-a387-d0fa7f9ca27c}</Project>
+      <Name>GraphPlotter</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
