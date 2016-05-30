@@ -44,7 +44,7 @@ namespace ProjetoPO
 
             foreach (var file in files)
             {
-                if (Path.GetFileNameWithoutExtension(file) != "RC101")
+                if (Path.GetFileNameWithoutExtension(file) != "C101")
                     continue;
 
                 Solve(file);
@@ -62,7 +62,7 @@ namespace ProjetoPO
             var customers = ReadFile(filePath, out vehicleNumber, out capacity);
             var matrix = AssembleMatrix(customers);
 
-            vehicleNumber = 2;
+            //vehicleNumber = 2;
 
             model = new Cplex();
 
@@ -147,20 +147,20 @@ namespace ProjetoPO
 
             for (int a = 0; a < vehicleNumber; a++)
             {
-                var exp = model.LinearNumExpr();
+                var oQueVoceCarregaExp = model.LinearNumExpr();
 
-                for (int i = 0; i < customers.Count; i++)
+                for (int i = 1; i < customers.Count; i++)
                 {
-                    exp.AddTerm(X[i, a], customers[i].Demand);
+                    oQueVoceCarregaExp.AddTerm(X[i, a], customers[i].Demand);
                 }
 
-                var exp1 = model.LinearNumExpr();
-                exp1.AddTerm(capacity, Y[a]);
-                model.AddLe(exp1, exp);
+                var capacidadeVeiculoExp = model.LinearNumExpr();
+                capacidadeVeiculoExp.AddTerm(capacity, Y[a]);
+                model.AddLe(oQueVoceCarregaExp, capacidadeVeiculoExp);
             }
 
             //Each customer is attended by one vehicle
-            for (int i = 0; i < customers.Count; i++)
+            for (int i = 1; i < customers.Count; i++)
             {
 
                 var exp = model.LinearNumExpr();
@@ -202,10 +202,10 @@ namespace ProjetoPO
             var of2 = model.LinearNumExpr();
             for (int a = 0; a < vehicleNumber; a++)
             {
-                of.AddTerm(1.0, Y[a]);
+                of2.AddTerm(1.0, Y[a]);
             }
 
-            model.Minimize(of2);
+            model.AddMinimize(of2);
 
             Console.WriteLine("[Solving...]");
 
@@ -227,9 +227,13 @@ namespace ProjetoPO
 
             Console.WriteLine("Solution status: " + model.GetStatus());
             Console.WriteLine("Objective value: " + model.ObjValue);
-            Console.WriteLine("\nBinary Graph:");
+            //Console.WriteLine("\nBinary Graph:");
             Console.WriteLine("---------------\n");
 
+            foreach (var item in Y)
+            {
+                Console.Write(model.GetValue(item));
+            }
             //Console.Write("    ");
             //for (int i = 0; i < X.N; i++) Console.Write(i + " ");
             //Console.WriteLine();
