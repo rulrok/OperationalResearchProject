@@ -83,13 +83,12 @@ namespace ProjetoPO
 
             //
             // Create decision variable Y
-            var Y = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+            var Y = new INumVar[vehicleNumber];
 
-            for (int i = 0; i < matrix.N; i++)
             {
-                for (int j = i; j < matrix.N; j++)
+                for (int i = 0; i < vehicleNumber; i++)
                 {
-                    Y[i, j] = model.BoolVar();
+                    Y[i] = model.BoolVar();
                 }
             }
 
@@ -109,7 +108,7 @@ namespace ProjetoPO
                 }
 
                 // Each vertex must connect to another one.
-                model.AddEq(exp, 2 * vehicleNumber);
+                //model.AddEq(exp, 2 * vehicleNumber);
             }
             // This is not necessary using the undirected model from page 14
             //{
@@ -139,9 +138,38 @@ namespace ProjetoPO
                 }
 
                 // Each vertex must connect to another one.
-                model.AddEq(exp, 2.0);
+                //model.AddEq(exp, 2.0);
             }
 
+            //----------------------------------------------------------------------------
+            // RESTRICTIONS TO FIND THE MINIMUM OF VEHICLES NEEDED
+            //----------------------------------------------------------------------------
+
+            for (int a = 0; a < vehicleNumber; a++)
+            {
+                var exp = model.LinearNumExpr();
+
+                for (int i = 0; i < customers.Count; i++)
+                {
+                    exp.AddTerm(X[i, a], customers[i].Demand);
+                }
+
+                var exp1 = model.LinearNumExpr();
+                exp1.AddTerm(capacity, Y[a]);
+                model.AddLe(exp1, exp);
+            }
+
+            //Each customer is attended by one vehicle
+            for (int i = 0; i < customers.Count; i++)
+            {
+
+                var exp = model.LinearNumExpr();
+                for (int a = 0; a < vehicleNumber; a++)
+                {
+                    exp.AddTerm(X[i, a], 1);
+                }
+                model.AddEq(exp, 1);
+            }
 
             //----------------------------------------------------------------------------
             // OBJECTIVE FUNCTION
@@ -164,7 +192,20 @@ namespace ProjetoPO
             //}
 
             //Minimize
-            model.AddMinimize(of);
+            //model.AddMinimize(of);
+
+            //----------------------------------------------------------------------------
+            // FIND THE MINIMUM OF VEHICLES (OBJETIVE FUNCTION)
+            //----------------------------------------------------------------------------
+
+
+            var of2 = model.LinearNumExpr();
+            for (int a = 0; a < vehicleNumber; a++)
+            {
+                of.AddTerm(1.0, Y[a]);
+            }
+
+            model.Minimize(of2);
 
             Console.WriteLine("[Solving...]");
 
@@ -189,26 +230,26 @@ namespace ProjetoPO
             Console.WriteLine("\nBinary Graph:");
             Console.WriteLine("---------------\n");
 
-            Console.Write("    ");
-            for (int i = 0; i < X.N; i++) Console.Write(i + " ");
-            Console.WriteLine();
-            Console.Write("  +");
-            for (int i = 0; i < X.N; i++) Console.Write("--");
-            Console.WriteLine();
+            //Console.Write("    ");
+            //for (int i = 0; i < X.N; i++) Console.Write(i + " ");
+            //Console.WriteLine();
+            //Console.Write("  +");
+            //for (int i = 0; i < X.N; i++) Console.Write("--");
+            //Console.WriteLine();
 
-            Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
+            //Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
 
-            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+            //var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
 
-            for (int i = 0; i < matrix.N; i++)
-            {
-                for (int j = i; j < matrix.N; j++)
-                {
-                    Xdouble[i, j] = model.GetValue(X[i, j]);
-                }
-            }
+            //for (int i = 0; i < matrix.N; i++)
+            //{
+            //    for (int j = i; j < matrix.N; j++)
+            //    {
+            //        Xdouble[i, j] = model.GetValue(X[i, j]);
+            //    }
+            //}
 
-            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
+            //PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
         }
 
         static void PlotPath(MatrizAdjacenciaSimetrica<double> matrix, List<PointD> points, string plotFileName = "VRP")
