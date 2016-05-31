@@ -47,8 +47,7 @@ namespace ProjetoPO
                 if (Path.GetFileNameWithoutExtension(file) != "C101")
                     continue;
 
-                Solve(file);
-                //test
+                SolveMinimumCars(file);
             }
 
             Console.WriteLine("Press any key to close the program...");
@@ -81,17 +80,6 @@ namespace ProjetoPO
 
             }
 
-            //
-            // Create decision variable Y
-            var Y = new INumVar[vehicleNumber];
-
-            {
-                for (int i = 0; i < vehicleNumber; i++)
-                {
-                    Y[i] = model.BoolVar();
-                }
-            }
-
             //----------------------------------------------------------------------------
             // RESTRICTIONS
             //----------------------------------------------------------------------------
@@ -108,7 +96,7 @@ namespace ProjetoPO
                 }
 
                 // Each vertex must connect to another one.
-                //model.AddEq(exp, 2 * vehicleNumber);
+                model.AddEq(exp, 2 * vehicleNumber);
             }
             // This is not necessary using the undirected model from page 14
             //{
@@ -138,7 +126,111 @@ namespace ProjetoPO
                 }
 
                 // Each vertex must connect to another one.
-                //model.AddEq(exp, 2.0);
+                model.AddEq(exp, 2.0);
+            }
+
+            
+
+            //----------------------------------------------------------------------------
+            // OBJECTIVE FUNCTION
+            //----------------------------------------------------------------------------
+
+            // See item (1.15) or (1.21) on page 14 of the book
+            var of = model.LinearNumExpr();
+
+            for (int i = 0; i < matrix.LinearSize; i++)
+            {
+                //Accessing as linear vector rather than matrix
+                of.AddTerm(matrix[i], X[i]);
+            }
+            //for (int i = 1; i < matrix.N; i++)
+            //{
+            //    for (int j = i; j < matrix.N; j++)
+            //    {
+            //        of.AddTerm(matrix[i, j], X[i, j]);
+            //    }
+            //}
+
+            //Minimize
+            model.AddMinimize(of);
+
+            Console.WriteLine("[Solving...]");
+
+            // Use callback to cut subtours.
+            model.Use(new Distribuicao());
+
+            var solved = model.Solve();
+
+            Console.WriteLine("[Solved]");
+
+            if (!solved)
+            {
+                Console.WriteLine("[No solution]\n");
+
+                Console.WriteLine(model.GetStatus());
+
+                return;
+            }
+
+            Console.WriteLine("Solution status: " + model.GetStatus());
+            Console.WriteLine("Objective value: " + model.ObjValue);
+            //Console.WriteLine("\nBinary Graph:");
+            Console.WriteLine("---------------\n");
+
+            Console.Write("    ");
+            for (int i = 0; i < X.N; i++) Console.Write(i + " ");
+            Console.WriteLine();
+            Console.Write("  +");
+            for (int i = 0; i < X.N; i++) Console.Write("--");
+            Console.WriteLine();
+
+            Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
+
+            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    Xdouble[i, j] = model.GetValue(X[i, j]);
+                }
+            }
+
+            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
+        }
+
+        private static void SolveMinimumCars(string filePath)
+        {
+            int vehicleNumber, capacity;
+            var customers = ReadFile(filePath, out vehicleNumber, out capacity);
+            var matrix = AssembleMatrix(customers);
+
+            model = new Cplex();
+
+            //
+            // Create decision variable X
+            X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    //If single-customer routes are not allowed, all used variables are binary; 
+                    //otherwise, all customers variables are binary and all depot-leaving variables are in {0, 1, 2} set.
+                    X[i, j] = model.BoolVar();
+                }
+
+            }
+
+            //
+            // Create decision variable Y
+            var Y = new INumVar[vehicleNumber];
+
+            {
+                for (int i = 0; i < vehicleNumber; i++)
+                {
+                    Y[i] = model.BoolVar();
+                }
             }
 
             //----------------------------------------------------------------------------
@@ -172,40 +264,18 @@ namespace ProjetoPO
             }
 
             //----------------------------------------------------------------------------
-            // OBJECTIVE FUNCTION
-            //----------------------------------------------------------------------------
-
-            // See item (1.15) or (1.21) on page 14 of the book
-            var of = model.LinearNumExpr();
-
-            for (int i = 0; i < matrix.LinearSize; i++)
-            {
-                //Accessing as linear vector rather than matrix
-                of.AddTerm(matrix[i], X[i]);
-            }
-            //for (int i = 1; i < matrix.N; i++)
-            //{
-            //    for (int j = i; j < matrix.N; j++)
-            //    {
-            //        of.AddTerm(matrix[i, j], X[i, j]);
-            //    }
-            //}
-
-            //Minimize
-            //model.AddMinimize(of);
-
-            //----------------------------------------------------------------------------
             // FIND THE MINIMUM OF VEHICLES (OBJETIVE FUNCTION)
             //----------------------------------------------------------------------------
 
 
-            var of2 = model.LinearNumExpr();
+            var of = model.LinearNumExpr();
             for (int a = 0; a < vehicleNumber; a++)
             {
-                of2.AddTerm(1.0, Y[a]);
+                of.AddTerm(1.0, Y[a]);
             }
 
-            model.AddMinimize(of2);
+            model.AddMinimize(of);
+
 
             Console.WriteLine("[Solving...]");
 
@@ -227,33 +297,13 @@ namespace ProjetoPO
 
             Console.WriteLine("Solution status: " + model.GetStatus());
             Console.WriteLine("Objective value: " + model.ObjValue);
-            //Console.WriteLine("\nBinary Graph:");
-            Console.WriteLine("---------------\n");
 
             foreach (var item in Y)
             {
                 Console.Write(model.GetValue(item));
             }
-            //Console.Write("    ");
-            //for (int i = 0; i < X.N; i++) Console.Write(i + " ");
-            //Console.WriteLine();
-            //Console.Write("  +");
-            //for (int i = 0; i < X.N; i++) Console.Write("--");
-            //Console.WriteLine();
 
-            //Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
 
-            //var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
-
-            //for (int i = 0; i < matrix.N; i++)
-            //{
-            //    for (int j = i; j < matrix.N; j++)
-            //    {
-            //        Xdouble[i, j] = model.GetValue(X[i, j]);
-            //    }
-            //}
-
-            //PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
         }
 
         static void PlotPath(MatrizAdjacenciaSimetrica<double> matrix, List<PointD> points, string plotFileName = "VRP")
