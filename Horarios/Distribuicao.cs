@@ -30,6 +30,7 @@ namespace ProjetoPO
         public override void Main()
         {
             // Cut subtours using 3rd party library.
+            Console.WriteLine("Corta sub-tours");
         }
 
         public static void Main(string[] args)
@@ -373,6 +374,171 @@ namespace ProjetoPO
 
             return customers;
         }
+
+        public static bool FindTours(MatrizAdjacenciaSimetrica<double> matrix, Cplex model, MatrizAdjacenciaSimetrica<INumVar> X)
+        {
+            // Stores which vertexes in the graph
+            // the algorithm visited in all iterations.
+            var visited = new bool[matrix.N];
+
+            // We must traverse the graph
+            // at least once, so do-while
+            // is better suited.
+            do
+            {
+
+                // First we find the first vertex was not visited
+                // so we know where to start from.
+                // This way the algorithm won't revist nodes
+                // and will potentially find new tours.
+                var firstNotVisited = Array.IndexOf(visited, false);
+
+                // This holds the vertex that were visited
+                // in a specific iteration only.
+                var visitedInCycle = new bool[matrix.N];
+
+                // This holds the vertex present in a
+                // cycle in order so that we know the
+                // path, which we can't infer only from
+                // the ones that were visited.
+                var vertexesInCycle = new List<int>(matrix.N);
+
+                dfs(matrix, firstNotVisited, firstNotVisited, visitedInCycle, vertexesInCycle);
+
+                /////////////////////////////////
+                // Add restriction based on    //
+                // vertexes in vertexesInCycle //
+                /////////////////////////////////
+
+                if (vertexesInCycle.Count != matrix.N)
+                {
+                    var exp = model.LinearNumExpr();
+
+                    int i = 0;
+                    for (; i < vertexesInCycle.Count - 1; i++)
+                    {
+                        // Connects each vertex to the next in the list.
+                        // Assuming vertexesInCyle equals
+                        // [a, b, c, d], then the expression
+                        // will be of the form
+                        // X[a,b] + X[b,c] + X[c,d] + X[d,a] <= vertexsInCycle.Count.
+                        Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[i + 1] + ")");
+                        exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[i + 1]]);
+                    }
+
+                    // Connects the last to the first,
+                    // which adds the "... + X[d,a]" in the expression.
+                    exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[0]]);
+                    Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
+
+                    Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
+                    model.AddLe(exp, vertexesInCycle.Count - 1);
+                }
+                else
+                {
+                    // Then our cycle contains all the vertexes
+                    // which means
+                    // OPTIMAL SOLUTION WAS FOUND.
+
+                    //return true;
+
+                    // Logs the vertexes connections
+                    // in the format 'x => y' in 
+                    // ascending order.
+                    var file = new StreamWriter(File.OpenWrite("saida.tsp"));
+
+                    var sb = new StringBuilder(vertexesInCycle.Count * 5);
+
+                    for (int i = 0; i < matrix.N; i++)
+                    {
+                        sb.Append(vertexesInCycle[i]);
+                        sb.Append(" => ");
+
+                        var idx = vertexesInCycle.IndexOf(i);
+
+                        if (idx < matrix.N - 1)
+                        {
+                            file.WriteLine(vertexesInCycle[idx] + " => " + vertexesInCycle[idx + 1]);
+                        }
+                        else
+                        {
+                            file.WriteLine(vertexesInCycle[idx] + " => " + vertexesInCycle[0]);
+                        }
+                    }
+
+                    sb.Append(vertexesInCycle[0]);
+                    file.WriteLine(sb.ToString());
+
+                    file.Close();
+
+                    return true;
+
+                }
+
+                for (int i = 0; i < visitedInCycle.Length; i++)
+                {
+                    if (visitedInCycle[i])
+                    {
+                        visited[i] = true;
+                    }
+                }
+
+                // Traverse until the algorithm visited
+                // all vertexes in the graph.
+            } while (visited.Where(v => v == true).Count() < visited.Length);
+
+
+            // The algorithm visited all vertex no cycle
+            // cycle containing all of them was found.
+            return false;
+        }
+
+        /// <summary>
+        /// Walks through the graph until a cycle is completed.
+        /// </summary>
+        /// <param name="matrix">The graph connectivity matrix.</param>
+        /// <param name="src">The source vertex.</param>
+        /// <param name="current">The current vertex.</param>
+        /// <param name="visited">Vertexes that were visited.</param>
+        /// <param name="vertexesInCycle">Vertexes present in the cycle, in order.</param>
+        static void dfs(MatrizAdjacenciaSimetrica<double> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
+        {
+            // Mark that the vertex was visited.
+            visited[current] = true;
+
+            // Add the node to the list of vertexes
+            // in the cycle.
+            vertexesInCycle.Add(current);
+
+            for (int j = 0; j < matrix.N; j++)
+            {
+                if (j != src &&
+                    matrix[current, j] > 0)
+                {
+                    if (!visited[j])
+                    {
+                        // Keep going.
+                        dfs(matrix, current, j, visited, vertexesInCycle);
+                    }
+
+                    // Two ways to get here:
+                    //
+                    // 1 - 'j' was already visited.
+                    // In this case, we are going back to a node already visited.
+                    // This means 'current' is the last vertex of a cycle
+                    // and connects to the origin.
+                    // No need to further walk the graph because each vertex
+                    // connect to only one other.
+                    //
+                    // 2 - the call to dfs returned.
+                    // In this case, we visited the only 'current'
+                    // could be connected to. Again, no need
+                    // to further walk the graph.
+                    return;
+                }
+            }
+        }
+
 
         static List<PointD> ReadPoints(string filePath)
         {
