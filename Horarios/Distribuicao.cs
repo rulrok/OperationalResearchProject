@@ -47,7 +47,7 @@ namespace ProjetoPO
                 if (Path.GetFileNameWithoutExtension(file) != "C101")
                     continue;
 
-                SolveMinimumCars(file);
+                Solve(file);
             }
 
             Console.WriteLine("Press any key to close the program...");
@@ -61,7 +61,7 @@ namespace ProjetoPO
             var customers = ReadFile(filePath, out vehicleNumber, out capacity);
             var matrix = AssembleMatrix(customers);
 
-            //vehicleNumber = 2;
+            vehicleNumber = 10;
 
             model = new Cplex();
 
@@ -117,7 +117,7 @@ namespace ProjetoPO
             {
                 var exp = model.LinearNumExpr();
 
-                for (int j = 1; j < X.N; j++)
+                for (int j = 0; j < X.N; j++)
                 {
                     if (i != j)
                     {
@@ -184,7 +184,7 @@ namespace ProjetoPO
             for (int i = 0; i < X.N; i++) Console.Write("--");
             Console.WriteLine();
 
-            Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
+            //Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
 
             var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
 
