@@ -25,12 +25,32 @@ namespace ProjetoPO
     {
         public static Cplex model;
         public static MatrizAdjacenciaSimetrica<INumVar> X;
+        public static MatrizAdjacenciaSimetrica<double> matrix;
+
+        public static int count = 0;
 
         // Callback Main.
         public override void Main()
         {
             // Cut subtours using 3rd party library.
             Console.WriteLine("Corta sub-tours");
+
+            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+
+            for (int i = 0; i < matrix.N; i++)
+            {
+                for (int j = i; j < matrix.N; j++)
+                {
+                    Xdouble[i, j] = GetValue(X[i, j]);
+                }
+            }
+
+            if (count >= 1) return;
+
+            var cycleWithAllVertexes = FindTours(Xdouble, model, X);
+
+            count++;
+
         }
 
         public static void Main(string[] args)
@@ -60,7 +80,7 @@ namespace ProjetoPO
         {
             int vehicleNumber, capacity;
             var customers = ReadFile(filePath, out vehicleNumber, out capacity);
-            var matrix = AssembleMatrix(customers);
+            matrix = AssembleMatrix(customers);
 
             vehicleNumber = 10;
 
@@ -381,6 +401,9 @@ namespace ProjetoPO
             // the algorithm visited in all iterations.
             var visited = new bool[matrix.N];
 
+            int nCuts = 0;
+            int tours = 0;
+
             // We must traverse the graph
             // at least once, so do-while
             // is better suited.
@@ -410,7 +433,7 @@ namespace ProjetoPO
                 // vertexes in vertexesInCycle //
                 /////////////////////////////////
 
-                if (vertexesInCycle.Count != matrix.N)
+                if (!vertexesInCycle.Contains(0) && nCuts < 1)
                 {
                     var exp = model.LinearNumExpr();
 
@@ -433,46 +456,13 @@ namespace ProjetoPO
 
                     Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
                     model.AddLe(exp, vertexesInCycle.Count - 1);
+
+                    nCuts++;
                 }
                 else
                 {
-                    // Then our cycle contains all the vertexes
-                    // which means
-                    // OPTIMAL SOLUTION WAS FOUND.
-
-                    //return true;
-
-                    // Logs the vertexes connections
-                    // in the format 'x => y' in 
-                    // ascending order.
-                    var file = new StreamWriter(File.OpenWrite("saida.tsp"));
-
-                    var sb = new StringBuilder(vertexesInCycle.Count * 5);
-
-                    for (int i = 0; i < matrix.N; i++)
-                    {
-                        sb.Append(vertexesInCycle[i]);
-                        sb.Append(" => ");
-
-                        var idx = vertexesInCycle.IndexOf(i);
-
-                        if (idx < matrix.N - 1)
-                        {
-                            file.WriteLine(vertexesInCycle[idx] + " => " + vertexesInCycle[idx + 1]);
-                        }
-                        else
-                        {
-                            file.WriteLine(vertexesInCycle[idx] + " => " + vertexesInCycle[0]);
-                        }
-                    }
-
-                    sb.Append(vertexesInCycle[0]);
-                    file.WriteLine(sb.ToString());
-
-                    file.Close();
-
-                    return true;
-
+                    Console.WriteLine("[" + (tours+1) + "] Tour includes depot.");
+                    tours++;
                 }
 
                 for (int i = 0; i < visitedInCycle.Length; i++)
@@ -513,7 +503,7 @@ namespace ProjetoPO
             for (int j = 0; j < matrix.N; j++)
             {
                 if (j != src &&
-                    matrix[current, j] > 0)
+                    matrix[current, j] == 1)
                 {
                     if (!visited[j])
                     {
