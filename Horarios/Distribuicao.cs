@@ -438,7 +438,7 @@ namespace ProjetoPO
                 // the ones that were visited.
                 var vertexesInCycle = new List<int>(matrix.N);
 
-                dfs(matrix: matrix,
+                dfs_visit(matrix: matrix,
                     src: firstNotVisited,
                     current: firstNotVisited,
                     visited: visitedInCycle,
@@ -509,7 +509,7 @@ namespace ProjetoPO
         /// <param name="current">The current vertex.</param>
         /// <param name="visited">Vertexes that were visited.</param>
         /// <param name="vertexesInCycle">Vertexes present in the cycle, in order.</param>
-        static void dfs(MatrizAdjacenciaSimetrica<double> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
+        static void dfs_visit(MatrizAdjacenciaSimetrica<double> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
         {
             // Mark that the vertex was visited.
             visited[current] = true;
@@ -525,7 +525,7 @@ namespace ProjetoPO
                     if (!visited[j])
                     {
                         // Keep going.
-                        dfs(matrix: matrix,
+                        dfs_visit(matrix: matrix,
                             src: current,
                             current: j,
                             visited: visited,

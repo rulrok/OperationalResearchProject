@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProjetoPO
 {
-    class MatrizAdjacenciaSimetrica<T>
+    public class MatrizAdjacenciaSimetrica<T>
     {
         T[] matrizLinear;
 
