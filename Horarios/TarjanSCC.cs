@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace ProjetoPO
 {
+    /// <summary>
+    /// This class implements the follow algorithm:
+    /// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm#Remarks
+    /// </summary>
     public class TarjanSCC : SCC
     {
         private MatrizAdjacenciaSimetrica<int> matrix;

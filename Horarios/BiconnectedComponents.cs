@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace ProjetoPO
 {
+    /// <summary>
+    /// This class implements the follow algorithm:
+    /// http://www.cs.umd.edu/class/fall2005/cmsc451/biconcomps.pdf
+    /// </summary>
     public class BiconnectedComponents : SCC
     {
 
