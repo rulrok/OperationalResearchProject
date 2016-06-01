@@ -48,8 +48,8 @@ namespace ProjetoPO
             }
 
             SCC scc = new BiconnectedComponents(Xint);
-            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++ );
             var components = scc.FindComponents();
+            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++ , components);
 
             foreach (var component in components)
             {
@@ -368,7 +368,7 @@ namespace ProjetoPO
 
         }
 
-        static void PlotPath(MatrizAdjacenciaSimetrica<int> matrix, List<PointD> points, string plotFileName = "VRP")
+        static void PlotPath(MatrizAdjacenciaSimetrica<int> matrix, List<PointD> points, string plotFileName = "VRP", List<List<int>> components = null)
         {
             double weight = 0;
 
@@ -399,7 +399,7 @@ namespace ProjetoPO
                 edges.Add(edge);
             }
 
-            var bmp = Plot(points, edges, 1024 * 5, 768 * 3);
+            var bmp = Plot(points, edges, 1024 * 5, 768 * 3, components);
             bmp.Save(plotFileName + ".png");
             bmp.Dispose();
         }

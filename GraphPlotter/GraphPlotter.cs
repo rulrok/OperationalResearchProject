@@ -61,7 +61,19 @@ namespace Plotter
             };
         }
 
-        public static Bitmap Plot(List<PointD> points, List<Edge> edges, int width = 500, int height = 500)
+        private static Color GetColor(int number)
+        {
+            var colors = typeof(Color).GetProperties(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+
+            var chosenColor = colors.ToList()
+                .Where(x => x.Name != "Transparent")
+                .ToList()[number % 100];
+
+            return Color.FromName(chosenColor.Name);
+
+        }
+
+        public static Bitmap Plot(List<PointD> points, List<Edge> edges, int width = 500, int height = 500, List<List<int>> components = null)
         {
 
             var area = new ChartArea();
@@ -153,13 +165,22 @@ namespace Plotter
                 if (i < edges.Count)
                 {
                     // Add lines.
+                    int color = i * 10;
                     foreach (var vertex in edges[i].ConnectingVertexesIndexes)
                     {
                         var edgeName = "edge(" + i + "," + vertex + ")";
                         var line = chart.Series.Add(edgeName);
                         line.ChartType = SeriesChartType.Line;
                         line.BorderWidth = 7;
-                        //line.Color = Color.ForestGreen;
+                        if (components != null)
+                        {
+                            var componentNumber = components.FindLastIndex(l => l.Contains(i));
+                            if (componentNumber < 0)
+                            {
+                                componentNumber = 0;
+                            }
+                            line.Color = GetColor(componentNumber * 2);
+                        }
                         line.Points.AddXY(p.X, p.Y);
                         line.Points.AddXY(points[vertex].X, points[vertex].Y);
 
