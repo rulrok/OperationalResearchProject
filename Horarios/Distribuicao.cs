@@ -45,7 +45,7 @@ namespace ProjetoPO
                 }
             }
 
-            if (count >= 1) return;
+            //if (count >= 1) return;
 
             var cycleWithAllVertexes = FindTours(Xdouble, model, X);
 
@@ -100,7 +100,7 @@ namespace ProjetoPO
                     X[i, j] = model.BoolVar();
                 }
 
-            } 
+            }
             #endregion
 
             //----------------------------------------------------------------------------
@@ -180,7 +180,7 @@ namespace ProjetoPO
             //}
 
             //Minimize
-            model.AddMinimize(of); 
+            model.AddMinimize(of);
             #endregion
 
             Console.WriteLine("[Solving...]");
@@ -228,7 +228,7 @@ namespace ProjetoPO
                 }
             }
 
-            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList()); 
+            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
             #endregion
         }
 
@@ -438,18 +438,24 @@ namespace ProjetoPO
                 // the ones that were visited.
                 var vertexesInCycle = new List<int>(matrix.N);
 
-                dfs(matrix, firstNotVisited, firstNotVisited, visitedInCycle, vertexesInCycle);
+                dfs(matrix: matrix,
+                    src: firstNotVisited,
+                    current: firstNotVisited,
+                    visited: visitedInCycle,
+                    vertexesInCycle: vertexesInCycle
+                    );
 
                 /////////////////////////////////
                 // Add restriction based on    //
                 // vertexes in vertexesInCycle //
                 /////////////////////////////////
 
-                if (!vertexesInCycle.Contains(0) && nCuts < 1)
+                if (!vertexesInCycle.Contains(0))
                 {
                     var exp = model.LinearNumExpr();
 
                     int i = 0;
+                    Console.WriteLine("Eliminar tour: " + string.Join(" ", vertexesInCycle.ToArray()));
                     for (; i < vertexesInCycle.Count - 1; i++)
                     {
                         // Connects each vertex to the next in the list.
@@ -457,23 +463,23 @@ namespace ProjetoPO
                         // [a, b, c, d], then the expression
                         // will be of the form
                         // X[a,b] + X[b,c] + X[c,d] + X[d,a] <= vertexsInCycle.Count.
-                        Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[i + 1] + ")");
+                        //Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[i + 1] + ")");
                         exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[i + 1]]);
                     }
 
                     // Connects the last to the first,
                     // which adds the "... + X[d,a]" in the expression.
                     exp.AddTerm(1.0, X[vertexesInCycle[i], vertexesInCycle[0]]);
-                    Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
+                    //Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
 
-                    Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
+                    //Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
                     model.AddLe(exp, vertexesInCycle.Count - 1);
 
                     nCuts++;
                 }
                 else
                 {
-                    Console.WriteLine("[" + (tours+1) + "] Tour includes depot.");
+                    Console.WriteLine("[" + (tours + 1) + "] Tour includes depot: " + string.Join(" ", vertexesInCycle.ToArray()));
                     tours++;
                 }
 
@@ -514,13 +520,17 @@ namespace ProjetoPO
 
             for (int j = 0; j < matrix.N; j++)
             {
-                if (j != src &&
-                    matrix[current, j] == 1)
+                if (j != src && matrix[current, j] == 1)
                 {
                     if (!visited[j])
                     {
                         // Keep going.
-                        dfs(matrix, current, j, visited, vertexesInCycle);
+                        dfs(matrix: matrix,
+                            src: current,
+                            current: j,
+                            visited: visited,
+                            vertexesInCycle: vertexesInCycle
+                            );
                     }
 
                     // Two ways to get here:
