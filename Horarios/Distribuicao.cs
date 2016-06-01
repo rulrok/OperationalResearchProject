@@ -28,13 +28,13 @@ namespace ProjetoPO
         public static MatrizAdjacenciaSimetrica<double> matrix;
         public static List<Customer> customers;
 
-        public static int count = 0;
-
         // Callback Main.
         public override void Main()
         {
-            // Cut subtours using 3rd party library.
-            Console.WriteLine("Corta sub-tours");
+            Console.WriteLine("==========================================");
+            Console.WriteLine("\tCorta sub-tours");
+            Console.WriteLine("==========================================");
+            Console.WriteLine();
 
             var Xint = new MatrizAdjacenciaSimetrica<int>(matrix.N);
 
@@ -42,18 +42,43 @@ namespace ProjetoPO
             {
                 for (int j = i; j < matrix.N; j++)
                 {
-                    Xint[i, j] = (int) GetValue(X[i, j]);
+                    Xint[i, j] = (int)GetValue(X[i, j]);
                 }
             }
 
-            //if (count >= 1) return;
             SCC scc = new BiconnectedComponents(Xint);
             PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_cut");
             var components = scc.FindComponents();
-            //var cycleWithAllVertexes = FindTours(Xint, model, X);
 
-            count++;
+            foreach (var component in components)
+            {
+                if (!component.Contains(0))
+                {
+                    var exp = model.LinearNumExpr();
 
+                    Console.WriteLine("Eliminar tour: " + string.Join(" ", component.ToArray()));
+                    int i = 0;
+                    for (; i < component.Count - 1; i++)
+                    {
+                        // Connects each vertex to the next in the list.
+                        // Assuming vertexesInCyle equals
+                        // [a, b, c, d], then the expression
+                        // will be of the form
+                        // X[a,b] + X[b,c] + X[c,d] + X[d,a] <= vertexsInCycle.Count.
+                        //Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[i + 1] + ")");
+                        exp.AddTerm(1.0, X[component[i], component[i + 1]]);
+                    }
+
+                    // Connects the last to the first,
+                    // which adds the "... + X[d,a]" in the expression.
+                    exp.AddTerm(1.0, X[component[i], component[0]]);
+                    //Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
+
+                    //Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
+                    model.AddLe(exp, component.Count - 1);
+                }
+            }
+            Console.WriteLine("\n\n");
         }
 
         public static void Main(string[] args)
@@ -227,7 +252,7 @@ namespace ProjetoPO
             {
                 for (int j = i; j < matrix.N; j++)
                 {
-                    Xdouble[i, j] = (int) model.GetValue(X[i, j]);
+                    Xdouble[i, j] = (int)model.GetValue(X[i, j]);
                 }
             }
 
