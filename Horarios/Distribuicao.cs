@@ -206,14 +206,16 @@ namespace ProjetoPO
             //Console.WriteLine("\nBinary Graph:");
             Console.WriteLine("---------------\n");
 
-            Console.Write("    ");
-            for (int i = 0; i < X.N; i++) Console.Write(i + " ");
-            Console.WriteLine();
-            Console.Write("  +");
-            for (int i = 0; i < X.N; i++) Console.Write("--");
-            Console.WriteLine();
+            #region Print X matrix
+            //Console.Write("    ");
+            //for (int i = 0; i < X.N; i++) Console.Write(i + " ");
+            //Console.WriteLine();
+            //Console.Write("  +");
+            //for (int i = 0; i < X.N; i++) Console.Write("--");
+            //Console.WriteLine();
 
             //Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
+            #endregion
 
             #region Plot graph
             var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
