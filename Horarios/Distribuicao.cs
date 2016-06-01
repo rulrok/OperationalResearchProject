@@ -26,6 +26,7 @@ namespace ProjetoPO
         public static Cplex model;
         public static MatrizAdjacenciaSimetrica<INumVar> X;
         public static MatrizAdjacenciaSimetrica<double> matrix;
+        public static List<Customer> customers;
 
         public static int count = 0;
 
@@ -35,19 +36,21 @@ namespace ProjetoPO
             // Cut subtours using 3rd party library.
             Console.WriteLine("Corta sub-tours");
 
-            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+            var Xint = new MatrizAdjacenciaSimetrica<int>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
                 for (int j = i; j < matrix.N; j++)
                 {
-                    Xdouble[i, j] = GetValue(X[i, j]);
+                    Xint[i, j] = (int) GetValue(X[i, j]);
                 }
             }
 
             //if (count >= 1) return;
-
-            var cycleWithAllVertexes = FindTours(Xdouble, model, X);
+            TarjanSCC scc = new TarjanSCC(Xint);
+            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_cut");
+            var components = scc.run();
+            //var cycleWithAllVertexes = FindTours(Xint, model, X);
 
             count++;
 
@@ -79,7 +82,7 @@ namespace ProjetoPO
         private static void Solve(string filePath)
         {
             int vehicleNumber, capacity;
-            var customers = ReadFile(filePath, out vehicleNumber, out capacity);
+            customers = ReadFile(filePath, out vehicleNumber, out capacity);
             matrix = AssembleMatrix(customers);
 
             vehicleNumber = 10;
@@ -218,13 +221,13 @@ namespace ProjetoPO
             #endregion
 
             #region Plot graph
-            var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
+            var Xdouble = new MatrizAdjacenciaSimetrica<int>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
                 for (int j = i; j < matrix.N; j++)
                 {
-                    Xdouble[i, j] = model.GetValue(X[i, j]);
+                    Xdouble[i, j] = (int) model.GetValue(X[i, j]);
                 }
             }
 
@@ -339,7 +342,7 @@ namespace ProjetoPO
 
         }
 
-        static void PlotPath(MatrizAdjacenciaSimetrica<double> matrix, List<PointD> points, string plotFileName = "VRP")
+        static void PlotPath(MatrizAdjacenciaSimetrica<int> matrix, List<PointD> points, string plotFileName = "VRP")
         {
             double weight = 0;
 
@@ -407,7 +410,7 @@ namespace ProjetoPO
             return customers;
         }
 
-        public static bool FindTours(MatrizAdjacenciaSimetrica<double> matrix, Cplex model, MatrizAdjacenciaSimetrica<INumVar> X)
+        public static bool FindTours(MatrizAdjacenciaSimetrica<int> matrix, Cplex model, MatrizAdjacenciaSimetrica<INumVar> X)
         {
             // Stores which vertexes in the graph
             // the algorithm visited in all iterations.
@@ -509,7 +512,7 @@ namespace ProjetoPO
         /// <param name="current">The current vertex.</param>
         /// <param name="visited">Vertexes that were visited.</param>
         /// <param name="vertexesInCycle">Vertexes present in the cycle, in order.</param>
-        static void dfs_visit(MatrizAdjacenciaSimetrica<double> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
+        static void dfs_visit(MatrizAdjacenciaSimetrica<int> matrix, int src, int current, bool[] visited, List<int> vertexesInCycle)
         {
             // Mark that the vertex was visited.
             visited[current] = true;

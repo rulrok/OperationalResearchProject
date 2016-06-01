@@ -23,6 +23,7 @@ namespace ProjetoPO
             visited = new bool[matrix.N];
             index = new int[matrix.N];
             lowlink = new int[matrix.N];
+            stack = new Stack<int>();
             indexCount = 0;
         }
 
