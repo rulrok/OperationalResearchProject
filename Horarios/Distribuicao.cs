@@ -47,9 +47,9 @@ namespace ProjetoPO
             }
 
             //if (count >= 1) return;
-            TarjanSCC scc = new TarjanSCC(Xint);
+            SCC scc = new BiconnectedComponents(Xint);
             PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_cut");
-            var components = scc.run();
+            var components = scc.FindComponents();
             //var cycleWithAllVertexes = FindTours(Xint, model, X);
 
             count++;

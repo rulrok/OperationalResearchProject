@@ -88,12 +88,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BiconnectedComponents.cs" />
     <Compile Include="Caminhos.cs" />
     <Compile Include="Distribuicao.cs" />
     <Compile Include="Horarios.cs" />
     <Compile Include="Main.cs" />
     <Compile Include="MatrizAdjacenciaSimetrica.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SCC.cs" />
     <Compile Include="TarjanSCC.cs" />
   </ItemGroup>
   <ItemGroup>

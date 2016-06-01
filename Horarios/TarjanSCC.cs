@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ProjetoPO
 {
-    public class TarjanSCC
+    public class TarjanSCC : SCC
     {
         private MatrizAdjacenciaSimetrica<int> matrix;
         private List<List<int>> components;
@@ -27,7 +27,7 @@ namespace ProjetoPO
             indexCount = 0;
         }
 
-        public List<List<int>> run()
+        public List<List<int>> FindComponents()
         {
             for(var i = 0; i < matrix.N; i++)
             {
