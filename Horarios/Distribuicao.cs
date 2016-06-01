@@ -27,6 +27,7 @@ namespace ProjetoPO
         public static MatrizAdjacenciaSimetrica<INumVar> X;
         public static MatrizAdjacenciaSimetrica<double> matrix;
         public static List<Customer> customers;
+        private static int callbackCount = 0;
 
         // Callback Main.
         public override void Main()
@@ -47,7 +48,7 @@ namespace ProjetoPO
             }
 
             SCC scc = new BiconnectedComponents(Xint);
-            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_cut");
+            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++ );
             var components = scc.FindComponents();
 
             foreach (var component in components)
@@ -57,8 +58,8 @@ namespace ProjetoPO
                     var exp = model.LinearNumExpr();
 
                     Console.WriteLine("Eliminar tour: " + string.Join(" ", component.ToArray()));
-                    int i = 0;
-                    for (; i < component.Count - 1; i++)
+                    
+                    for (int i = 0; i < component.Count - 1; i++)
                     {
                         // Connects each vertex to the next in the list.
                         // Assuming vertexesInCyle equals
@@ -71,7 +72,7 @@ namespace ProjetoPO
 
                     // Connects the last to the first,
                     // which adds the "... + X[d,a]" in the expression.
-                    exp.AddTerm(1.0, X[component[i], component[0]]);
+                    exp.AddTerm(1.0, X[component.Last(), component.First()]);
                     //Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
 
                     //Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
