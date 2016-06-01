@@ -88,6 +88,7 @@ namespace ProjetoPO
 
             //
             // Create decision variable X
+            #region Decision variable
             X = new MatrizAdjacenciaSimetrica<INumVar>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
@@ -99,7 +100,8 @@ namespace ProjetoPO
                     X[i, j] = model.BoolVar();
                 }
 
-            }
+            } 
+            #endregion
 
             //----------------------------------------------------------------------------
             // RESTRICTIONS
@@ -108,6 +110,7 @@ namespace ProjetoPO
 
             // Forces that the depot to have 'vehicleNumber' edges departing/arriving.
             // Equivalent to restriction (1.17) or (1.23) in the book [p. 14]
+            #region Restriction 1
             {
                 var exp = model.LinearNumExpr();
 
@@ -130,10 +133,12 @@ namespace ProjetoPO
 
             //    // Each vertex must connect to another one.
             //    model.AddEq(exp, 2 * vehicleNumber);
-            //}
+            //} 
+            #endregion
 
             // Forces every vertex execept the zeroth to connect to another one.
             // See restrictions (1.16) and (1.17) or (1.22) and (1.23) in the book [p. 14]
+            #region Restriction 2
             for (int i = 1; i < X.N; i++)
             {
                 var exp = model.LinearNumExpr();
@@ -149,13 +154,15 @@ namespace ProjetoPO
                 // Each vertex must connect to another one.
                 model.AddEq(exp, 2.0);
             }
+            #endregion
 
-            
+
 
             //----------------------------------------------------------------------------
             // OBJECTIVE FUNCTION
             //----------------------------------------------------------------------------
 
+            #region Objective Function
             // See item (1.15) or (1.21) on page 14 of the book
             var of = model.LinearNumExpr();
 
@@ -173,7 +180,8 @@ namespace ProjetoPO
             //}
 
             //Minimize
-            model.AddMinimize(of);
+            model.AddMinimize(of); 
+            #endregion
 
             Console.WriteLine("[Solving...]");
 
@@ -207,6 +215,7 @@ namespace ProjetoPO
 
             //Console.WriteLine(X.ToString(v => model.GetValue(v).ToString()));
 
+            #region Plot graph
             var Xdouble = new MatrizAdjacenciaSimetrica<double>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
@@ -217,7 +226,8 @@ namespace ProjetoPO
                 }
             }
 
-            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
+            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList()); 
+            #endregion
         }
 
         private static void SolveMinimumCars(string filePath)
