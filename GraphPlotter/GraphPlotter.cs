@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -174,12 +175,12 @@ namespace Plotter
                         line.BorderWidth = 7;
                         if (components != null)
                         {
-                            var componentNumber = components.FindLastIndex(l => l.Contains(i));
+                            var componentNumber = components.FindIndex(c => c.Contains(i));
                             if (componentNumber < 0)
                             {
                                 componentNumber = 0;
                             }
-                            line.Color = GetColor(componentNumber * 2);
+                            line.Color = GetColor(componentNumber);
                         }
                         line.Points.AddXY(p.X, p.Y);
                         line.Points.AddXY(points[vertex].X, points[vertex].Y);

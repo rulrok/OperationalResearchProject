@@ -76,9 +76,11 @@ namespace ProjetoPO
                     //Console.WriteLine("Eliminar: (" + vertexesInCycle[i] + "," + vertexesInCycle[0] + ")");
 
                     //Console.WriteLine("Coun - 1 = " + (vertexesInCycle.Count - 1));
-                    model.AddLe(exp, component.Count - 1);
+                    //model.AddLe(exp, component.Count - 1);
+
                 }
             }
+
             Console.WriteLine("\n\n");
         }
 
@@ -126,7 +128,10 @@ namespace ProjetoPO
                 {
                     //If single-customer routes are not allowed, all used variables are binary; 
                     //otherwise, all customers variables are binary and all depot-leaving variables are in {0, 1, 2} set.
-                    X[i, j] = model.BoolVar();
+                    if (i == 0)
+                        X[i, j] = model.IntVar(0, 2);
+                    else
+                        X[i, j] = model.BoolVar();
                 }
 
             }
