@@ -30,7 +30,7 @@ namespace ProjetoPO
 
         public struct CnstrMgrRecord
         {
-            public CnstrRecord CPL;
+            public CnstrRecord CPL; //Maybe I could only have a IntPtr here and remove the above struct
             public int Dim;
             public int Size;
         }
@@ -46,8 +46,17 @@ namespace ProjetoPO
                     ref CnstrMgrRecord CMPExistingCuts,
                     int MaxNoOfCuts,
                     double EpsForIntegrality,
-                    ref char IntegerAndFeasible,
+                    StringBuilder IntegerAndFeasible, //char* originally (http://stackoverflow.com/questions/18495818/how-to-pass-and-receive-data-from-a-char-from-c-sharp-to-an-unmanaged-c-dll)
                     ref double MaxViolation,
                     ref CnstrMgrRecord CutsCMP);
+
+        [DllImport(@"./../Debug/CVRPSEP.dll")]
+        public static extern void CMGR_CreateCMgr(ref CnstrMgrRecord CMP, int Dim);
+
+        [DllImport(@"./../Debug/CVRPSEP.dll")]
+        public static extern void CMGR_MoveCnstr(ref CnstrMgrRecord SourcePtr,
+                    ref CnstrMgrRecord SinkPtr,
+                    int SourceIndex,
+                    int SinkIndex);
     }
 }
