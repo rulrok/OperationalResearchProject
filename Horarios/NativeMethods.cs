@@ -35,7 +35,7 @@ namespace ProjetoPO
             public int Size;
         }
 
-        [DllImport("CVRPSEP.dll")]
+        [DllImport(@"./../Debug/CVRPSEP.dll")]
         public static extern void CAPSEP_SeparateCapCuts(int NoOfCustomers,
                     ref int Demand,
                     int CAP,
