@@ -8,9 +8,184 @@ using ILOG.Concert;
 using ILOG.CPLEX;
 using Plotter;
 using static Plotter.GraphPlotter;
+using System.Runtime.InteropServices;
+using System.Threading;
+using Microsoft.Win32.SafeHandles;
+using System.Diagnostics;
 
 namespace ProjetoPO
 {
+    public class NamedPipeServer
+    {
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern SafeFileHandle CreateNamedPipe(
+           String pipeName,
+           uint dwOpenMode,
+           uint dwPipeMode,
+           uint nMaxInstances,
+           uint nOutBufferSize,
+           uint nInBufferSize,
+           uint nDefaultTimeOut,
+           IntPtr lpSecurityAttributes);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern int ConnectNamedPipe(
+           SafeFileHandle hNamedPipe,
+           IntPtr lpOverlapped);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern int DisconnectNamedPipe(
+           SafeFileHandle hNamedPipe);
+
+        public const uint DUPLEX = (0x00000003);
+        public const uint FILE_FLAG_OVERLAPPED = (0x40000000);
+
+        public class Client
+        {
+            public SafeFileHandle handle;
+            public FileStream stream;
+        }
+
+        public const int BUFFER_SIZE = 100;
+        public Client clientse = null;
+
+        public string pipeName;
+        Thread listenThread;
+        SafeFileHandle clientHandle;
+        public int ClientType;
+
+        public NamedPipeServer(string PName, int Mode)
+        {
+            pipeName = PName;
+            ClientType = Mode;//0 Reading Pipe, 1 Writing Pipe
+
+        }
+
+        public void Start()
+        {
+            this.listenThread = new Thread(new ThreadStart(ListenForClients));
+            this.listenThread.Start();
+        }
+
+        private void ListenForClients()
+        {
+            while (true)
+            {
+
+                clientHandle = CreateNamedPipe(this.pipeName, DUPLEX | FILE_FLAG_OVERLAPPED, 0, 255, BUFFER_SIZE, BUFFER_SIZE, 0, IntPtr.Zero);
+
+                //could not create named pipe
+                if (clientHandle.IsInvalid)
+                    return;
+
+                int success = ConnectNamedPipe(clientHandle, IntPtr.Zero);
+
+                //could not connect client
+                if (success == 0)
+                    return;
+
+                clientse = new Client();
+                clientse.handle = clientHandle;
+                clientse.stream = new FileStream(clientse.handle, FileAccess.ReadWrite, BUFFER_SIZE, true);
+
+                if (ClientType == 0)
+                {
+                    Thread readThread = new Thread(new ThreadStart(Read));
+                    readThread.Start();
+                }
+            }
+        }
+
+        private void Read()
+        {
+            //Client client = (Client)clientObj;
+            //clientse.stream = new FileStream(clientse.handle, FileAccess.ReadWrite, BUFFER_SIZE, true);
+            byte[] buffer = null;
+            ASCIIEncoding encoder = new ASCIIEncoding();
+
+            while (true)
+            {
+
+                int bytesRead = 0;
+
+                try
+                {
+                    buffer = new byte[BUFFER_SIZE];
+                    bytesRead = clientse.stream.Read(buffer, 0, BUFFER_SIZE);
+                }
+                catch
+                {
+                    //read error has occurred
+                    break;
+                }
+
+                //client has disconnected
+                if (bytesRead == 0)
+                    break;
+
+                //fire message received event
+                //if (this.MessageReceived != null)
+                //    this.MessageReceived(clientse, encoder.GetString(buffer, 0, bytesRead));
+
+                int ReadLength = 0;
+                for (int i = 0; i < BUFFER_SIZE; i++)
+                {
+                    if (buffer[i].ToString("x2") != "cc")
+                    {
+                        ReadLength++;
+                    }
+                    else
+                        break;
+                }
+                if (ReadLength > 0)
+                {
+                    byte[] Rc = new byte[ReadLength];
+                    Buffer.BlockCopy(buffer, 0, Rc, 0, ReadLength);
+
+                    Console.WriteLine("C# App: Received " + ReadLength + " Bytes: " + encoder.GetString(Rc, 0, ReadLength));
+                    buffer.Initialize();
+                }
+
+            }
+
+            //clean up resources
+            clientse.stream.Close();
+            clientse.handle.Close();
+
+        }
+
+        public void SendMessage(byte[] bytesToSend, Client client)
+        {
+
+            if (client != null && client.stream.CanWrite)
+            {
+                client.stream.Write(bytesToSend, 0, bytesToSend.Length);
+                client.stream.Flush();
+            }
+
+
+        }
+
+        public void StopServer()
+        {
+            //clean up resources
+
+            if (this.clientHandle != null)
+            {
+                DisconnectNamedPipe(this.clientHandle);
+            }
+
+            if (this.listenThread != null)
+            {
+
+                this.listenThread.Abort();
+            }
+
+
+        }
+
+    }
+
     struct Customer
     {
         public int Id { get; set; }
@@ -32,6 +207,8 @@ namespace ProjetoPO
         // Callback Main.
         public override void Main()
         {
+
+
             Console.WriteLine("==========================================");
             Console.WriteLine("\tCorta sub-tours");
             Console.WriteLine("==========================================");
@@ -84,8 +261,51 @@ namespace ProjetoPO
             Console.WriteLine("\n\n");
         }
 
+
+        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+        [DllImport("kernel32.dll", EntryPoint = "LoadLibrary", SetLastError = true)]
+        static extern IntPtr LoadLibrary(
+            [MarshalAs(UnmanagedType.LPStr)] string lpLibFileName);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        delegate IntPtr dllOpenPipeMethod();
+
+        static byte[] GetBytes(string str)
+        {
+            byte[] bytes = new byte[str.Length * sizeof(char)];
+            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
+
+        static string GetString(byte[] bytes)
+        {
+            char[] chars = new char[bytes.Length / sizeof(char)];
+            System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+            return new string(chars);
+        }
+
+
+
         public static void Main(string[] args)
         {
+            
+            string dllPath = @"C:\Users\Victor\PO\x64\Debug\VRPDll.dll";
+
+            var dllHandle = LoadLibrary(dllPath);
+
+            IntPtr dllfunc = GetProcAddress(dllHandle, "openPipe"); //0x0001900F
+
+            var pipeServer = new NamedPipeServer(@"\\.\pipe\poPipe", 1);
+            pipeServer.Start();
+
+            var openPipe = (dllOpenPipeMethod)Marshal.GetDelegateForFunctionPointer(dllfunc, typeof(dllOpenPipeMethod));
+            openPipe();
+            
+            pipeServer.SendMessage(GetBytes("received!"), pipeServer.clientse);
 
             //*******************************************************
             //  Obtem os dados de arquivo externo
@@ -105,6 +325,11 @@ namespace ProjetoPO
             Console.WriteLine("Press any key to close the program...");
             Console.ReadKey(true);
 
+        }
+
+        private static bool isEven(int i)
+        {
+            return i % 2 == 0;
         }
 
         private static void Solve(string filePath)
