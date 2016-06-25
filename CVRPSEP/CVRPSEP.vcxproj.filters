@@ -1,0 +1,177 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BASEGRPH.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BinPack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="blocks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="brnching.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CAPSEP.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CNSTRMGR.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="combsep.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="COMPCUTS.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="COMPRESS.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CUTBASE.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FCAPFIX.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FCISEP.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="fcits.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glmsep.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GRSEARCH.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HPMSTAR.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="htoursep.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="intap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MEMMOD.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MSTARSEP.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MXF.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NEWHTOUR.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SORT.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="STRCOMB.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="STRNGCMP.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TWOMATCH.CPP">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="BASEGRPH.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BINPACK.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="blocks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="brnching.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CAPSEP.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CNSTRMGR.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="combsep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="COMPCUTS.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="COMPRESS.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CUTBASE.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FCAPFIX.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FCISEP.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fcits.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="glmsep.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Grsearch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HPMSTAR.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HTOURSEP.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="intap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MEMMOD.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MSTARSEP.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MXF.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NEWHTOUR.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SORT.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="STRCOMB.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="STRNGCMP.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TWOMATCH.H">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

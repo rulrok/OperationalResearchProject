@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using ILOG.Concert;
 using ILOG.CPLEX;
 using Plotter;
@@ -226,7 +225,62 @@ namespace ProjetoPO
 
             SCC scc = new BiconnectedComponents(Xint);
             var components = scc.FindComponents();
-            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++ , components);
+            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++, components);
+
+
+            StringBuilder IntegerAndFeasible = new StringBuilder();
+            int NoOfCustomers = 0, CAP = 0, NoOfEdges = 0, MaxNoOfCuts = 0;
+            double EpsForIntegrality, MaxViolation = 0;
+            int Demand = 0, EdgeTail = 0, EdgeHead = 0;
+            double EdgeX = 0;
+            NativeMethods.CnstrMgrRecord MyCutsCMP = new NativeMethods.CnstrMgrRecord();
+            NativeMethods.CnstrMgrRecord MyOldCutsCMP = new NativeMethods.CnstrMgrRecord();
+
+            NativeMethods.CMGR_CreateCMgr(ref MyCutsCMP, 100);
+            NativeMethods.CMGR_CreateCMgr(ref MyOldCutsCMP, 100); /* Contains no cuts initially */
+
+            /* Allocate memory for the three vectors EdgeTail, EdgeHead, and EdgeX */
+            /* Solve the initial LP */
+
+            EpsForIntegrality = 0.0001;
+
+            do
+            {
+                /* Store the information on the current LP solution */
+                /* in EdgeTail, EdgeHead, EdgeX. */
+                /* Call separation. Pass the previously found cuts in MyOldCutsCMP: */
+
+                NativeMethods.CAPSEP_SeparateCapCuts(NoOfCustomers,
+                ref Demand,
+                CAP,
+                NoOfEdges,
+                ref EdgeTail,
+                ref EdgeHead,
+                ref EdgeX,
+                ref MyOldCutsCMP,
+                MaxNoOfCuts,
+                EpsForIntegrality,
+                IntegerAndFeasible,
+                ref MaxViolation,
+                ref MyCutsCMP);
+
+                if (IntegerAndFeasible.Equals('0')) break; /* Optimal solution found */
+
+                if (MyCutsCMP.Size == 0) break; /* No cuts found */
+
+                /* Read the cuts from MyCutsCMP, and add them to the LP */
+                /* Resolve the LP */
+
+
+                /* Move the new cuts to the list of old cuts: */
+                for (int i = 0; i < MyCutsCMP.Size; i++)
+                {
+                    NativeMethods.CMGR_MoveCnstr(ref MyCutsCMP, ref MyOldCutsCMP, i, 0);
+                }
+                MyCutsCMP.Size = 0;
+            } while (true);
+
+            return;
 
             foreach (var component in components)
             {
@@ -235,7 +289,7 @@ namespace ProjetoPO
                     var exp = model.LinearNumExpr();
 
                     Console.WriteLine("Eliminar tour: " + string.Join(" ", component.ToArray()));
-                    
+
                     for (int i = 0; i < component.Count - 1; i++)
                     {
                         // Connects each vertex to the next in the list.
