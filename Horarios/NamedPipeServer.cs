@@ -9,6 +9,33 @@ namespace ProjetoPO
 {
     public class NamedPipeServer
     {
+
+        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
+
+        [DllImport("kernel32.dll", EntryPoint = "LoadLibrary", SetLastError = true)]
+        static extern IntPtr LoadLibrary(
+            [MarshalAs(UnmanagedType.LPStr)] string lpLibFileName);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        delegate IntPtr dllOpenPipeMethod();
+
+        static byte[] GetBytes(string str)
+        {
+            byte[] bytes = new byte[str.Length * sizeof(char)];
+            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
+
+        static string GetString(byte[] bytes)
+        {
+            char[] chars = new char[bytes.Length / sizeof(char)];
+            System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+            return new string(chars);
+        }
+
         [DllImport("kernel32.dll", SetLastError = true)]
         public static extern SafeFileHandle CreateNamedPipe(
            String pipeName,
