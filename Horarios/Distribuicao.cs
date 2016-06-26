@@ -80,7 +80,11 @@ namespace ProjetoPO
             int NoOfCustomers = instanceModel.customers.Count() - 1; //apenas consumidores (todos) - não considera depósito
             int CAP = instanceModel.CAP; //capacidade - serve apena para o CVRP homogêneo
             int NoOfEdges = 0; //número total de arestas, considerando as arestas usadas (!=0)
-            int MaxNoOfCuts = 0; //por exemplo, 100 (ele as vezes retorna menos)
+            for (int i = 0; i < matrix.N; i++)
+                for (int j = 0; j < matrix.N; j++)
+                    if (Xint[i, j] > 0)
+                        NoOfEdges++;
+            int MaxNoOfCuts = 100; //por exemplo, 100 (ele as vezes retorna menos)
             int Demand = 0; //vetor de demandas - pula a posição 0 e coloca as demandas a partir de 1 (#n+1)
             int EdgeTail = 0;
             int EdgeHead = 0;
