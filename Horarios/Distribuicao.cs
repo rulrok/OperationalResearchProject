@@ -85,7 +85,7 @@ namespace ProjetoPO
                     if (Xint[i, j] > 0)
                         NoOfEdges++;
             int MaxNoOfCuts = 100; //por exemplo, 100 (ele as vezes retorna menos)
-            int Demand = 0; //vetor de demandas - pula a posição 0 e coloca as demandas a partir de 1 (#n+1)
+            int[] Demand = instanceModel.customers.Where((c,index) => index > 0).Select(c => c.Demand).ToArray(); //vetor de demandas - pula a posição 0 e coloca as demandas a partir de 1 (#n+1)
             int EdgeTail = 0;
             int EdgeHead = 0;
 

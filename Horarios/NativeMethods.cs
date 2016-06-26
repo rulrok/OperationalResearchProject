@@ -36,8 +36,9 @@ namespace ProjetoPO
         }
 
         [DllImport(@"./../Debug/VRPDll.dll")]
-        public static extern void CAPSEP_SeparateCapCuts(int NoOfCustomers,
-                    ref int Demand,
+        public static extern void CAPSEP_SeparateCapCuts(
+                    int NoOfCustomers,
+                    ref int[] Demand,
                     int CAP,
                     int NoOfEdges,
                     ref int EdgeTail,
@@ -48,7 +49,8 @@ namespace ProjetoPO
                     double EpsForIntegrality,
                     StringBuilder IntegerAndFeasible, //char* originally (http://stackoverflow.com/questions/18495818/how-to-pass-and-receive-data-from-a-char-from-c-sharp-to-an-unmanaged-c-dll)
                     ref double MaxViolation,
-                    ref CnstrMgrRecord CutsCMP);
+                    ref CnstrMgrRecord CutsCMP
+            );
 
         [DllImport(@"./../Debug/VRPDll.dll")]
         public static extern void CMGR_CreateCMgr(ref CnstrMgrRecord CMP, int Dim);
