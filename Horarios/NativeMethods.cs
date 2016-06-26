@@ -35,7 +35,7 @@ namespace ProjetoPO
             public int Size;
         }
 
-        [DllImport(@"./../Debug/CVRPSEP.dll")]
+        [DllImport(@"./../Debug/VRPDll.dll")]
         public static extern void CAPSEP_SeparateCapCuts(int NoOfCustomers,
                     ref int Demand,
                     int CAP,
@@ -50,10 +50,10 @@ namespace ProjetoPO
                     ref double MaxViolation,
                     ref CnstrMgrRecord CutsCMP);
 
-        [DllImport(@"./../Debug/CVRPSEP.dll")]
+        [DllImport(@"./../Debug/VRPDll.dll")]
         public static extern void CMGR_CreateCMgr(ref CnstrMgrRecord CMP, int Dim);
 
-        [DllImport(@"./../Debug/CVRPSEP.dll")]
+        [DllImport(@"./../Debug/VRPDll.dll")]
         public static extern void CMGR_MoveCnstr(ref CnstrMgrRecord SourcePtr,
                     ref CnstrMgrRecord SinkPtr,
                     int SourceIndex,
