@@ -24,9 +24,7 @@ namespace ProjetoPO
     class CRVP
     {
         public int NoOfCustomers;
-        public int Demand;
         public int CAP;
-        public int NoOfEdges;
         public List<Customer> customers;
 
     }
