@@ -38,7 +38,7 @@ namespace ProjetoPO
         [DllImport(@"./../Debug/VRPDll.dll")]
         public static extern void CAPSEP_SeparateCapCuts(
                     int NoOfCustomers,
-                    ref int[] Demand,
+                    IntPtr Demand,
                     int CAP,
                     int NoOfEdges,
                     ref int EdgeTail,

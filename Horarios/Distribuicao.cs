@@ -76,21 +76,30 @@ namespace ProjetoPO
             // Prepare the variables to call the extern library method
             //----------------------------------------------------------------------------
             StringBuilder IntegerAndFeasible = new StringBuilder(); //verificar otimalidade
-
+            //NoOfCustomers
             int NoOfCustomers = instanceModel.customers.Count() - 1; //apenas consumidores (todos) - não considera depósito
+            //Capacity
             int CAP = instanceModel.CAP; //capacidade - serve apena para o CVRP homogêneo
+            //NoOfEdges
             int NoOfEdges = 0; //número total de arestas, considerando as arestas usadas (!=0)
             for (int i = 0; i < matrix.N; i++)
                 for (int j = 0; j < matrix.N; j++)
                     if (Xint[i, j] > 0)
                         NoOfEdges++;
+            //MaxNoOfCuts
             int MaxNoOfCuts = 100; //por exemplo, 100 (ele as vezes retorna menos)
-            int[] Demand = instanceModel.customers.Where((c,index) => index > 0).Select(c => c.Demand).ToArray(); //vetor de demandas - pula a posição 0 e coloca as demandas a partir de 1 (#n+1)
+            //Demand array and Ptr version (idea from here http://stackoverflow.com/questions/289076/how-can-i-pass-a-pointer-to-an-array-using-p-invoke-in-c)
+            int[] Demand = instanceModel.customers.Where((c, index) => index > 0).Select(c => c.Demand).ToArray(); //vetor de demandas - pula a posição 0 e coloca as demandas a partir de 1 (#n+1)
+            IntPtr DemandPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * Demand.Length);
+            Marshal.Copy(Demand, 0, DemandPtr, Demand.Length);
+            //Tail and head information
             int EdgeTail = 0;
             int EdgeHead = 0;
 
             double EdgeX = 0; //valor de x de cada aresta (pode ser fracionário)
+
             double EpsForIntegrality = 0.0001; //10^4
+
             double MaxViolation = 0; //endereço de um double => ignorar por enquanto...
 
             NativeMethods.CnstrMgrRecord MyCutsCMP = new NativeMethods.CnstrMgrRecord();
@@ -110,7 +119,7 @@ namespace ProjetoPO
 
                 NativeMethods.CAPSEP_SeparateCapCuts(
                     NoOfCustomers,
-                    ref Demand,
+                    DemandPtr,
                     CAP,
                     NoOfEdges,
                     ref EdgeTail,
