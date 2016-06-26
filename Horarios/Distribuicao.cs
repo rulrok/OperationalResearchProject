@@ -183,11 +183,6 @@ namespace ProjetoPO
 
         }
 
-        private static bool isEven(int i)
-        {
-            return i % 2 == 0;
-        }
-
         private static void Solve(string filePath)
         {
             int vehicleNumber, capacity;
