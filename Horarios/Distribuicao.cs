@@ -75,15 +75,20 @@ namespace ProjetoPO
             //----------------------------------------------------------------------------
             // Prepare the variables to call the extern library method
             //----------------------------------------------------------------------------
+            StringBuilder IntegerAndFeasible = new StringBuilder(); //verificar otimalidade
 
-            StringBuilder IntegerAndFeasible = new StringBuilder();
-            int NoOfCustomers = instanceModel.customers.Count() - 1, //Ignore the depot
-                CAP = instanceModel.CAP,
-                NoOfEdges = 0,
-                MaxNoOfCuts = 0;
-            double EpsForIntegrality, MaxViolation = 0;
-            int Demand = 0, EdgeTail = 0, EdgeHead = 0;
-            double EdgeX = 0;
+            int NoOfCustomers = instanceModel.customers.Count() - 1; //apenas consumidores (todos) - não considera depósito
+            int CAP = instanceModel.CAP; //capacidade - serve apena para o CVRP homogêneo
+            int NoOfEdges = 0; //número total de arestas, considerando as arestas usadas (!=0)
+            int MaxNoOfCuts = 0; //por exemplo, 100 (ele as vezes retorna menos)
+            int Demand = 0; //vetor de demandas - pula a posição 0 e coloca as demandas a partir de 1 (#n+1)
+            int EdgeTail = 0;
+            int EdgeHead = 0;
+
+            double EdgeX = 0; //valor de x de cada aresta (pode ser fracionário)
+            double EpsForIntegrality = 0.0001; //10^4
+            double MaxViolation = 0; //endereço de um double => ignorar por enquanto...
+
             NativeMethods.CnstrMgrRecord MyCutsCMP = new NativeMethods.CnstrMgrRecord();
             NativeMethods.CnstrMgrRecord MyOldCutsCMP = new NativeMethods.CnstrMgrRecord();
 
@@ -92,8 +97,6 @@ namespace ProjetoPO
 
             /* Allocate memory for the three vectors EdgeTail, EdgeHead, and EdgeX */
             /* Solve the initial LP */
-
-            EpsForIntegrality = 0.0001;
 
             do
             {
@@ -123,7 +126,6 @@ namespace ProjetoPO
 
                 /* Read the cuts from MyCutsCMP, and add them to the LP */
                 /* Resolve the LP */
-
 
                 /* Move the new cuts to the list of old cuts: */
                 for (int i = 0; i < MyCutsCMP.Size; i++)
