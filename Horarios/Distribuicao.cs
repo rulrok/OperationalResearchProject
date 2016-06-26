@@ -241,7 +241,7 @@ namespace ProjetoPO
 
             /* Allocate memory for the three vectors EdgeTail, EdgeHead, and EdgeX */
             /* Solve the initial LP */
-
+            
             EpsForIntegrality = 0.0001;
 
             do
@@ -346,20 +346,25 @@ namespace ProjetoPO
 
         public static void Main(string[] args)
         {
-            
-            string dllPath = @"C:\Users\Victor\PO\x64\Debug\VRPDll.dll";
 
-            var dllHandle = LoadLibrary(dllPath);
+            //*******************************************************
+            //  Testes do Victor
+            //
+            //*******************************************************
 
-            IntPtr dllfunc = GetProcAddress(dllHandle, "openPipe"); //0x0001900F
+            //string dllPath = @"C:\Users\Victor\PO\x64\Debug\VRPDll.dll";
 
-            var pipeServer = new NamedPipeServer(@"\\.\pipe\poPipe", 1);
-            pipeServer.Start();
+            //var dllHandle = LoadLibrary(dllPath);
 
-            var openPipe = (dllOpenPipeMethod)Marshal.GetDelegateForFunctionPointer(dllfunc, typeof(dllOpenPipeMethod));
-            openPipe();
-            
-            pipeServer.SendMessage(GetBytes("received!"), pipeServer.clientse);
+            //IntPtr dllfunc = GetProcAddress(dllHandle, "openPipe"); //0x0001900F
+
+            //var pipeServer = new NamedPipeServer(@"\\.\pipe\poPipe", 1);
+            //pipeServer.Start();
+
+            //var openPipe = (dllOpenPipeMethod)Marshal.GetDelegateForFunctionPointer(dllfunc, typeof(dllOpenPipeMethod));
+            //openPipe();
+
+            //pipeServer.SendMessage(GetBytes("received!"), pipeServer.clientse);
 
             //*******************************************************
             //  Obtem os dados de arquivo externo
