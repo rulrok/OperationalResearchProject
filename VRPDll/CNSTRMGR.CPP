@@ -8,7 +8,7 @@
 #include "cnstrmgr.h"
 #include "memmod.h"
 
-void CMGR_CreateCMgr(CnstrMgrPointer *CMP, int Dim)
+extern "C" __declspec(dllexport) void CMGR_CreateCMgr(CnstrMgrPointer *CMP, int Dim)
 {
   int i;
 
@@ -567,7 +567,7 @@ void CMGR_AddPartialMStar(CnstrMgrPointer CMP,
 
 }
 
-void CMGR_MoveCnstr(CnstrMgrPointer SourcePtr,
+extern "C" __declspec(dllexport) void CMGR_MoveCnstr(CnstrMgrPointer SourcePtr,
                     CnstrMgrPointer SinkPtr,
                     int SourceIndex,
                     int SinkIndex)

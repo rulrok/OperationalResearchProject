@@ -57,7 +57,7 @@ void CAPSEP_GetOneVehicleCapCuts(CnstrMgrPointer CutsCMP,
   *NoOfCuts = Size;
 }
 
-void CAPSEP_SeparateCapCuts(int NoOfCustomers,
+extern "C" __declspec(dllexport)  void CAPSEP_SeparateCapCuts(int NoOfCustomers,
                             int *Demand,
                             int CAP,
                             int NoOfEdges,

@@ -58,7 +58,7 @@ typedef struct
 typedef CnstrMgrRecord *CnstrMgrPointer;
 
 
-void CMGR_CreateCMgr(CnstrMgrPointer *CMP, int Dim);
+extern "C" __declspec(dllexport) void CMGR_CreateCMgr(CnstrMgrPointer *CMP, int Dim);
 void CMGR_FreeMemCMgr(CnstrMgrPointer *CMP);
 void CMGR_AddCnstr(CnstrMgrPointer CMP,
                    int CType, int Key, int IntListSize, int *IntList,
@@ -99,7 +99,7 @@ void CMGR_AddPartialMStar(CnstrMgrPointer CMP,
                           int ExtListSize, int *ExtList,
                           int CListSize, int *CList,
                           int A, int B, int L);
-void CMGR_MoveCnstr(CnstrMgrPointer SourcePtr,
+extern "C" __declspec(dllexport) void CMGR_MoveCnstr(CnstrMgrPointer SourcePtr,
                     CnstrMgrPointer SinkPtr,
                     int SourceIndex,
                     int SinkIndex);
