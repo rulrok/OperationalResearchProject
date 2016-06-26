@@ -43,7 +43,7 @@ namespace ProjetoPO
                     int NoOfEdges,
                     ref int EdgeTail,
                     ref int EdgeHead,
-                    ref double EdgeX,
+                    IntPtr EdgeX,
                     ref CnstrMgrRecord CMPExistingCuts,
                     int MaxNoOfCuts,
                     double EpsForIntegrality,
