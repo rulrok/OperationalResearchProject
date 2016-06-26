@@ -21,13 +21,23 @@ namespace ProjetoPO
         public int Demand { get; set; }
     }
 
+    class CRVP
+    {
+        public int NoOfCustomers;
+        public int Demand;
+        public int CAP;
+        public int NoOfEdges;
+        public List<Customer> customers;
+
+    }
+
     class Distribuicao : Cplex.LazyConstraintCallback
     {
         public static Cplex model;
         public static MatrizAdjacenciaSimetrica<INumVar> X;
         public static MatrizAdjacenciaSimetrica<double> matrix;
-        public static List<Customer> customers;
         private static int callbackCount = 0;
+        private static CRVP instanceModel;
 
         // Callback Main.
         public override void Main()
@@ -35,9 +45,14 @@ namespace ProjetoPO
 
 
             Console.WriteLine("==========================================");
-            Console.WriteLine("==\tCorta sub-tours                     ==");
+            Console.WriteLine("== Corta sub-tours                      ==");
             Console.WriteLine("==========================================");
             Console.WriteLine();
+
+
+            //----------------------------------------------------------------------------
+            // Get the values found for the cplex model
+            //----------------------------------------------------------------------------
 
             var Xint = new MatrizAdjacenciaSimetrica<int>(matrix.N);
 
@@ -49,13 +64,23 @@ namespace ProjetoPO
                 }
             }
 
+            //----------------------------------------------------------------------------
+            // Find the tours on the graph and plot them
+            //----------------------------------------------------------------------------
+
             SCC scc = new BiconnectedComponents(Xint);
             var components = scc.FindComponents();
-            PlotPath(Xint, customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++, components);
+            PlotPath(Xint, instanceModel.customers.Select(p => p.Coord).ToList(), "VRP_" + callbackCount++, components);
 
+            //----------------------------------------------------------------------------
+            // Prepare the variables to call the extern library method
+            //----------------------------------------------------------------------------
 
             StringBuilder IntegerAndFeasible = new StringBuilder();
-            int NoOfCustomers = 0, CAP = 0, NoOfEdges = 0, MaxNoOfCuts = 0;
+            int NoOfCustomers = instanceModel.customers.Count() - 1, //Ignore the depot
+                CAP = instanceModel.CAP,
+                NoOfEdges = 0,
+                MaxNoOfCuts = 0;
             double EpsForIntegrality, MaxViolation = 0;
             int Demand = 0, EdgeTail = 0, EdgeHead = 0;
             double EdgeX = 0;
@@ -67,7 +92,7 @@ namespace ProjetoPO
 
             /* Allocate memory for the three vectors EdgeTail, EdgeHead, and EdgeX */
             /* Solve the initial LP */
-            
+
             EpsForIntegrality = 0.0001;
 
             do
@@ -76,19 +101,21 @@ namespace ProjetoPO
                 /* in EdgeTail, EdgeHead, EdgeX. */
                 /* Call separation. Pass the previously found cuts in MyOldCutsCMP: */
 
-                NativeMethods.CAPSEP_SeparateCapCuts(NoOfCustomers,
-                ref Demand,
-                CAP,
-                NoOfEdges,
-                ref EdgeTail,
-                ref EdgeHead,
-                ref EdgeX,
-                ref MyOldCutsCMP,
-                MaxNoOfCuts,
-                EpsForIntegrality,
-                IntegerAndFeasible,
-                ref MaxViolation,
-                ref MyCutsCMP);
+                NativeMethods.CAPSEP_SeparateCapCuts(
+                    NoOfCustomers,
+                    ref Demand,
+                    CAP,
+                    NoOfEdges,
+                    ref EdgeTail,
+                    ref EdgeHead,
+                    ref EdgeX,
+                    ref MyOldCutsCMP,
+                    MaxNoOfCuts,
+                    EpsForIntegrality,
+                    IntegerAndFeasible,
+                    ref MaxViolation,
+                    ref MyCutsCMP
+                );
 
                 if (IntegerAndFeasible.Equals('0')) break; /* Optimal solution found */
 
@@ -185,11 +212,12 @@ namespace ProjetoPO
 
         private static void Solve(string filePath)
         {
-            int vehicleNumber, capacity;
-            customers = ReadFile(filePath, out vehicleNumber, out capacity);
-            matrix = AssembleMatrix(customers);
+            instanceModel = new CRVP();
+            instanceModel.customers = ReadFile(filePath, out instanceModel.NoOfCustomers, out instanceModel.CAP);
 
-            vehicleNumber = 10;
+            matrix = AssembleMatrix(instanceModel.customers);
+
+            instanceModel.NoOfCustomers = 10;
 
             model = new Cplex();
 
@@ -230,7 +258,7 @@ namespace ProjetoPO
                 }
 
                 // Each vertex must connect to another one.
-                model.AddEq(exp, 2 * vehicleNumber);
+                model.AddEq(exp, 2 * instanceModel.NoOfCustomers);
             }
             // This is not necessary using the undirected model from page 14
             //{
@@ -338,7 +366,7 @@ namespace ProjetoPO
                 }
             }
 
-            PlotPath(Xdouble, customers.Select(p => p.Coord).ToList());
+            PlotPath(Xdouble, instanceModel.customers.Select(p => p.Coord).ToList());
             #endregion
         }
 
