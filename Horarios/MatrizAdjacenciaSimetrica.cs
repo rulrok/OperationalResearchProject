@@ -29,6 +29,28 @@ namespace ProjetoPO
         }
     }
 
+    public class MatrizAdjacenciaSimetricaInt : MatrizAdjacenciaSimetrica<int>
+    {
+        public MatrizAdjacenciaSimetricaInt(int dimensao) : base(dimensao)
+        {
+
+        }
+
+        public List<int> Adjacentes(int node)
+        {
+            List<int> _adjacentes = new List<int>(N);
+            for (int i = 0; i < N; i++)
+            {
+                if (this[node, i] > 0)
+                {
+                    _adjacentes.Add(i);
+                }
+            }
+
+            return _adjacentes;
+        }
+    }
+
     public class MatrizAdjacenciaSimetrica<T>
     {
         T[] matrizLinear;
