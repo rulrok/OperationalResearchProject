@@ -33,7 +33,7 @@ namespace ProjetoPO
     {
         public static Cplex model;
         public static MatrizAdjacenciaSimetrica<INumVar> X;
-        public static MatrizAdjacenciaSimetrica<double> matrix;
+        public static MatrizAdjacenciaSimetricaDouble matrix;
         private static int callbackCount = 0;
         private static CRVP instanceModel;
 
@@ -109,8 +109,8 @@ namespace ProjetoPO
             //  Note that edge numbers are 1 - based (e = 1, . . . , NoOfEdges).
 
             //  Tail and head information
-            int EdgeTail = 0;
-            int EdgeHead = 0;
+            IntPtr EdgeTail = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * NoOfEdges);
+            IntPtr EdgeHead = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * NoOfEdges);
 
             //EdgeX
             List<double> EdgeXList = new List<double>(1000);
@@ -152,8 +152,8 @@ namespace ProjetoPO
                     DemandPtr,
                     CAP,
                     NoOfEdges,
-                    ref EdgeTail,
-                    ref EdgeHead,
+                    EdgeTail,
+                    EdgeHead,
                     EdgeXPtr,
                     ref MyOldCutsCMP,
                     MaxNoOfCuts,
@@ -401,17 +401,17 @@ namespace ProjetoPO
             #endregion
 
             #region Plot graph
-            var Xdouble = new MatrizAdjacenciaSimetrica<int>(matrix.N);
+            var Xint = new MatrizAdjacenciaSimetrica<int>(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
                 for (int j = i; j < matrix.N; j++)
                 {
-                    Xdouble[i, j] = (int)model.GetValue(X[i, j]);
+                    Xint[i, j] = (int)model.GetValue(X[i, j]);
                 }
             }
 
-            PlotPath(Xdouble, instanceModel.customers.Select(p => p.Coord).ToList());
+            PlotPath(Xint, instanceModel.customers.Select(p => p.Coord).ToList());
             #endregion
         }
 
@@ -590,9 +590,9 @@ namespace ProjetoPO
             return customers;
         }
 
-        private static MatrizAdjacenciaSimetrica<double> AssembleMatrix(List<Customer> customers)
+        private static MatrizAdjacenciaSimetricaDouble AssembleMatrix(List<Customer> customers)
         {
-            var matrix = new MatrizAdjacenciaSimetrica<double>(customers.Count);
+            var matrix = new MatrizAdjacenciaSimetricaDouble(customers.Count);
 
             for (int i = 0; i < matrix.N - 1; i++)
             {
