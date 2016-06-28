@@ -52,7 +52,7 @@ namespace ProjetoPO
             // Get the values found for the cplex model
             //----------------------------------------------------------------------------
 
-            var Xint = new MatrizAdjacenciaSimetrica<int>(matrix.N);
+            var Xint = new MatrizAdjacenciaSimetricaInt(matrix.N);
 
             for (int i = 0; i < matrix.N; i++)
             {
@@ -109,8 +109,30 @@ namespace ProjetoPO
             //  Note that edge numbers are 1 - based (e = 1, . . . , NoOfEdges).
 
             //  Tail and head information
-            IntPtr EdgeTail = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * NoOfEdges);
-            IntPtr EdgeHead = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * NoOfEdges);
+            List<int> TailList = new List<int>(NoOfEdges);
+            List<int> HeadList = new List<int>(NoOfEdges);
+            List<int> aux;
+
+            for (int i = 1; i < Xint.N; i++)
+            {
+                var adjacentes = Xint.Adjacentes(i);
+
+                TailList.Add(adjacentes[0]);
+                if (adjacentes.Count > 1)
+                    HeadList.Add(adjacentes[1]);
+                else
+                    HeadList.Add(adjacentes[0]);
+
+                //change lists pointers
+                aux = TailList;
+                TailList = HeadList;
+                HeadList = aux;
+            }
+
+            IntPtr EdgeTail = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * (NoOfEdges + 1));
+            Marshal.Copy(HeadList.ToArray(), 0, EdgeTail, HeadList.Count);
+            IntPtr EdgeHead = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * (NoOfEdges + 1));
+            Marshal.Copy(TailList.ToArray(), 0, EdgeHead, HeadList.Count);
 
             //EdgeX
             List<double> EdgeXList = new List<double>(1000);
@@ -119,9 +141,8 @@ namespace ProjetoPO
                     if (Xint[i, j] > 0)
                         EdgeXList.Add(GetValue(X[i, j])); //Try using the original value
 
-            double[] EdgeX = EdgeXList.ToArray(); //valor de x de cada aresta (pode ser fracionário)
-            IntPtr EdgeXPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(double)) * EdgeX.Length);
-            Marshal.Copy(EdgeX, 0, EdgeXPtr, EdgeX.Length);
+            IntPtr EdgeX = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(double)) * (NoOfEdges + 1));
+            Marshal.Copy(EdgeXList.ToArray(), 0, EdgeX, EdgeXList.Count);
 
             //Margin of error
             double EpsForIntegrality = 0.0001; //10^4
@@ -154,7 +175,7 @@ namespace ProjetoPO
                     NoOfEdges,
                     EdgeTail,
                     EdgeHead,
-                    EdgeXPtr,
+                    EdgeX,
                     ref MyOldCutsCMP,
                     MaxNoOfCuts,
                     EpsForIntegrality,
