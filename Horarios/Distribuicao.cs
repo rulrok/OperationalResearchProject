@@ -76,12 +76,16 @@ namespace ProjetoPO
             StringBuilder IntegerAndFeasible = new StringBuilder(); //verificar otimalidade
 
             //NoOfCustomers
+            //  The number of customers in the problem. The n customers
+            //  are assumed to be numbered 1, . . . , n.
             int NoOfCustomers = instanceModel.customers.Count() - 1; //apenas consumidores (todos) - não considera depósito
 
-            //Capacity
+            //The capacity of each vehicle.
             int CAP = instanceModel.CAP; //capacidade - serve apena para o CVRP homogêneo
 
             //NoOfEdges
+            //  The number of edges for which information is passed
+            //  by EdgeTail, EdgeHead, and EdgeX
             int NoOfEdges = 0; //número total de arestas, considerando as arestas usadas (!=0)
             for (int i = 0; i < matrix.N; i++)
                 for (int j = 0; j < matrix.N; j++)
@@ -96,7 +100,15 @@ namespace ProjetoPO
             IntPtr DemandPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(int)) * Demand.Length);
             Marshal.Copy(Demand, 0, DemandPtr, Demand.Length);
 
-            //Tail and head information
+            //  These three vectors give information on the current LP solution.
+            //      Only information on those edges e with x∗ e > 0
+            //      should be passed in the three vectors.
+            //  EdgeTail[e], EdgeHead[e] are the two end vertices of edge e.
+            //  EdgeX[e] is x∗ e.
+            //  The depot is assumed to be numbered n+1. 
+            //  Note that edge numbers are 1 - based (e = 1, . . . , NoOfEdges).
+
+            //  Tail and head information
             int EdgeTail = 0;
             int EdgeHead = 0;
 
@@ -104,7 +116,9 @@ namespace ProjetoPO
             List<double> EdgeXList = new List<double>(1000);
             for (int i = 0; i < matrix.N; i++)
                 for (int j = 0; j < matrix.N; j++)
-                    EdgeXList.Add(GetValue(X[i, j]));
+                    if (Xint[i, j] > 0)
+                        EdgeXList.Add(GetValue(X[i, j])); //Try using the original value
+
             double[] EdgeX = EdgeXList.ToArray(); //valor de x de cada aresta (pode ser fracionário)
             IntPtr EdgeXPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(double)) * EdgeX.Length);
             Marshal.Copy(EdgeX, 0, EdgeXPtr, EdgeX.Length);
@@ -117,8 +131,12 @@ namespace ProjetoPO
             NativeMethods.CnstrMgrRecord MyCutsCMP = new NativeMethods.CnstrMgrRecord();
             NativeMethods.CnstrMgrRecord MyOldCutsCMP = new NativeMethods.CnstrMgrRecord();
 
-            NativeMethods.CMGR_CreateCMgr(ref MyCutsCMP, 100);
-            NativeMethods.CMGR_CreateCMgr(ref MyOldCutsCMP, 100); /* Contains no cuts initially */
+            //  The Dim parameter is the number of cuts for which memory is reserved
+            //initially.Don’t worry about reserving insufficient memory.The MyCutsCMP
+            //structure expands itself if neccessary in order to store all of the cuts
+            int Dim = 100;
+            NativeMethods.CMGR_CreateCMgr(ref MyCutsCMP, Dim);
+            NativeMethods.CMGR_CreateCMgr(ref MyOldCutsCMP, Dim); /* Contains no cuts initially */
 
             /* Allocate memory for the three vectors EdgeTail, EdgeHead, and EdgeX */
             /* Solve the initial LP */
